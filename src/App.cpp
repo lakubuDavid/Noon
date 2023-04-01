@@ -15,7 +15,7 @@ App::App(int port) : _port(port){
 App::~App()
 {
     // Shutdown the script engine
-    scriptEngine->close();
+    scriptEngine->close(); 
 }
 
 int App::run() {

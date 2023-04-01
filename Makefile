@@ -65,7 +65,7 @@ else
 	@mkdir -p $(OBJ)
 endif
 	@echo $(CYAN)Compiling: $(RED)$(@F)$(RESET)
-	@$(CXX) -g -std=c++20 -I $(INC) -c $< -o $@
+	@$(CXX) -std=c++20 -I $(INC) -c $< -o $@
 
 # Generate executable
 $(TARGET): $(OBJS)
@@ -75,7 +75,7 @@ else
 	@mkdir -p $(BIN)
 endif
 	@echo $(CYAN)Creating executable: $(GREEN)$(@F)$(RESET)
-	@$(CXX) $(OBJS) -o $@ $(FLAGS)
+	@$(CXX) -g $(OBJS) -o $@ $(FLAGS)
 
 .PHONY: run
 run:
