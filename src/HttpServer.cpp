@@ -59,6 +59,7 @@ void HttpServer::init() {
 }
 
 bool HttpServer::tick() {
+    // boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     char client_msg[4096] = "";
 
     this->_clientSocket = accept(this->_socket, NULL, NULL);
@@ -95,38 +96,53 @@ bool HttpServer::tick() {
     int status_code = 404;
     auto contentType = "text/plain; charset=utf-8";
 
-    std::string endpoint = this->router()->getEndpoint(urlRoute);
+    auto endpoint = this->router()->getEndpoint(urlRoute);
 
     // Serve a static file as an asset (only the server is allowed to access it)
     if (std::string(urlRoute).find("/assets") == 0) {
     } else {
         // Check the router for the endpoint
-        lua_State* lua = this->_app->script()->getLuaState();
+        lua_State *L = this->_app->script()->getLuaState();
 
         // Call the lua endpoint
-        printf("Checking lua route:%s\n", urlRoute);
-        lua_getglobal(lua, endpoint.c_str());
-        if (lua_istable(lua, -1)) {
-            lua_pushstring(lua, method);
-            lua_gettable(lua, -2);
-            if (lua_isfunction(lua, -1)) {
-                lua_pushvalue(lua, -2); // Push the table onto the stack
-                int status = lua_pcall(lua, 1, 2, 0);
+        // printf("Checking lua route:%s\n", urlRoute);
+        lua_getglobal(L, endpoint.path.c_str());
+        if (lua_istable(L, -1)) {
+            lua_pushstring(L, method);
+            lua_gettable(L, -2);
+            if (lua_isfunction(L, -1)) {
+                response_data = "";
+                lua_pushvalue(L, -2); // Push the table onto the stack
+                int status = lua_pcall(L, 1, 2, 0);
                 if (status == LUA_OK) {
-                    response_data = "";
-                    response_data = (char *)lua_tostring(lua, -2);
-                    status_code = lua_tointeger(lua, -1);
-                    lua_pop(lua, 2);
+                    if (lua_isstring(L, -2)) {
+                        response_data = (char *)lua_tostring(L, -2);
+                        if (lua_isnoneornil(L, -1)) {
+                            status_code = 200;
+                        }
+                    } else if (lua_isnoneornil(L, -2)) {
+                        response_data = "";
+                        if (lua_isnoneornil(L, -1)) {
+                            status_code = 200;
+                        }
+                    }
+                    if (lua_isinteger(L, -1))
+                        status_code = lua_tointeger(L, -1);
+                    else if (lua_isstring(L, -1)) {
+                        response_data = (char *)lua_tostring(L, -1);
+                        status_code = 200;
+                    }
+                    lua_pop(L, 2);
 
                 } else {
                     const char *errorMsg = lua_tostring(
-                        lua, -1);    // Get the error message from the stack
-                    lua_pop(lua, 1); // Pop the error message from the stack
+                        L, -1);    // Get the error message from the stack
+                    lua_pop(L, 1); // Pop the error message from the stack
                     std::cerr << errorMsg << std::endl;
                 }
             } else {
-                std::cout << "Error: Can't call route " << method << " : "
-                          << endpoint << std::endl;
+                std::cout << "Error: Can't call method " << method
+                          << " on route " << endpoint.path << std::endl;
             }
         } else {
             printf("Checking static file:%s\n", urlRoute);
@@ -134,20 +150,10 @@ bool HttpServer::tick() {
             std::string path = std::string("./static") + urlRoute;
             printf("Full path: %s\n", path.c_str());
 
-            std::ifstream static_file = std::ifstream();
-            static_file.open(path, std::ios::binary | std::ios::ate);
-            if (static_file.is_open()) {
-                const std::streamsize size = static_file.tellg();
-                static_file.seekg(0, std::ios::beg);
-                static_file.close();
-                
-                printf("%s :\n\tSize:%lu bytes\n\tSent:%lu bytes\n",
-                       path.c_str(), size, sizeof(response_data));
-                status_code = 200;
-
+            if (boost::filesystem::exists(path)) {
+                // FIXME : This should read and return a static file but I have no clue of how I'm supppsed to do it without segmentation faults 🥲
             } else {
-                printf("Nothing found \n");
-                std::cout << "Error: Can't load route \"" << urlRoute << "\""
+                std::cout << "Error: Can't get route \"" << urlRoute << "\""
                           << std::endl;
             }
         }
@@ -157,10 +163,12 @@ bool HttpServer::tick() {
 
     std::stringstream http_header;
 
-    if (response_data[0] == '<') {
-        contentType = "text/html; charset=utf-8";
-    } else if (response_data[0] == '{') {
-        contentType = "application/json";
+    if (strlen(response_data) >= 1) {
+        if (response_data[0] == '<') {
+            contentType = "text/html; charset=utf-8";
+        } else if (response_data[0] == '{') {
+            contentType = "application/json";
+        }
     }
     http_header << "HTTP/1.1 " << status_code << " "
                 << getStatusMessage(status_code) << std::endl;
@@ -179,6 +187,10 @@ bool HttpServer::tick() {
     strcat(response, chttp_header.c_str());
     strcat(response, response_data);
     strcat(response, "\r\n\r\n");
+
+    // FIXME : The header disapears from the response when it's an html response
+
+    printf("%s",response);
 
     send(this->_clientSocket, response, response_size, 0);
     close(this->_clientSocket);

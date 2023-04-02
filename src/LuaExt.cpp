@@ -1,6 +1,4 @@
 #include "LuaExt.h"
-#include "json.h"
-#include "lua.h"
 #include <cstdio>
 
 using namespace std;
@@ -142,14 +140,59 @@ char *nativeFetch(std::string url, std::string method, std::string data) {
 
     pos = url.find("/");
     string host = url.substr(0, pos);
+
+    string port = url.substr(url.find(":"), pos-url.find(":"));
+    int porti = 0;
+    int s = port.size();
+    for (int i = 0; i < s; i++)
+    {
+        int n = 0;
+        switch (port[i]) {
+        case '0':
+            n = 0;
+            break;
+        case '1':
+            n = 1;
+            break;
+        case '2':
+            n = 2;
+            break;
+        case '3':
+            n = 3;
+            break;
+        case '4':
+            n = 4;
+            break;
+        case '5':
+            n = 5;
+            break;
+        case '6':
+            n = 6;
+            break;
+        case '7':
+            n = 7;
+            break;
+        case '8':
+            n = 8;
+            break;
+        case '9':
+            n = 9;
+            break;
+        default:
+            break;
+        }
+
+        porti += n * pow(10,s-i-1);
+    }
+    printf("port %s | %d\n", port.c_str(),porti);
     string path = url.substr(pos);
-    printf("[fetch] : Fetching %s from %s | %s\n", path.c_str(), host.c_str(),
-           method.c_str());
+    printf("[fetch] : Fetching %s from %s | %s on port %d\n", path.c_str(), host.c_str(),
+           method.c_str(),porti);
 
     struct sockaddr_in server;
     server.sin_addr.s_addr = inet_addr(host.c_str());
     server.sin_family = AF_INET;
-    server.sin_port = htons(80);
+    server.sin_port = htons(porti);
 
     if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
         cerr << "[fetch] : Connection failed" << endl;
@@ -208,7 +251,6 @@ int fetch(lua_State *L) {
         if ((method == "POST" || method == "PUT") && !lua_isstring(L, -1)) {
             // If the method is POST or PUT, the 3rd argument should be
             // provided as a string
-            // TODO : send back an error message to lua
             lua_pushnil(L);
             return 1;
         } else {
@@ -216,19 +258,18 @@ int fetch(lua_State *L) {
         }
 
         char *fdata = nativeFetch(url, method, data);
-        long timer = time(NULL);
+        // long timer = time(NULL);
         if (fdata == NULL) {
-          cerr << "Nothing fetched from " << url << endl;
+            //   cerr << "Nothing fetched from " << url << endl;
             lua_pushnil(L);
         } else {
-          timer = time(NULL) - timer;
-          cout << timer << "ms elapsed"<<endl;
+            //   timer = time(NULL) - timer;
+            //   cout << timer << "ms elapsed"<<endl;
             lua_pushstring(L, fdata);
         }
         return 1;
     }
     // First 2 args are mandatory
-    // TODO : send back an error message to lua
     printf("[lua] : Invalid arguments for fetch");
     lua_pushnil(L);
     return 1;

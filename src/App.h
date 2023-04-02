@@ -17,8 +17,7 @@ class App {
     int _port = 8080;
     bool _devMode = false;
 public:
-    App();
-    App(int port);
+    App(int port=8080);
     virtual ~App();
     void renderTemplate(std::string template_name, void *context);
 

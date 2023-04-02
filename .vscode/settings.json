@@ -8,7 +8,8 @@
         "get",
         "home",
         "api",
-        "name"
+        "name",
+        "api_fetch"
     ],
     "files.associations": {
         "*.cfg": "properties",
@@ -78,9 +79,20 @@
         "variant": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
-        "concepts": "cpp"
+        "concepts": "cpp",
+        "any": "cpp",
+        "csignal": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "numeric": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp"
     },
     "Lua.diagnostics.disable": [
-        "undefined-global"
-    ]
+        "undefined-global",
+        "duplicate-set-field"
+    ],
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
 }

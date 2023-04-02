@@ -104,12 +104,28 @@ end
 
 ```
 
+## Limitations
+
+Since static file serving is not yet implemented you can't reference assets from your project that includes `css,js` files and **pictures**
+
+>### Workaround
+>
+>For `css` and `js` files you can have them in your html file.
+>
+>You can also reference your assets from a cdn.
 ## Development (pls help me 😫)
 
 I'm currently trying to implement data fetching and static file serving but I can't figure out how to implement it. So to whoever has enough knowledge of C++, please feel free to help.
 
 *Yours faithfully,*<br>
 *A guy that has decided to lose his sanity to a language he already gave up on a few years ago.*
+
+## Build requirements
+
+Here is a list of third party requirements that you may need to build it:
+
+- Lua 5.4
+- Boost 1.81
 
 ## Contact me
 

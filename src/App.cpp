@@ -1,12 +1,7 @@
 #include "App.h"
 
 
-App::App()
-{
-    scriptEngine = new ScriptEngine();
-    auto app = this;
-    httpServer = new HttpServer(8080,this);
-}
+
 App::App(int port) : _port(port){
     scriptEngine = new ScriptEngine();
     httpServer = new HttpServer(this->_port,this);
@@ -36,25 +31,35 @@ int App::run() {
             auto key = it->first;
             auto path = it->second;
             
-            auto name = path.substr(0, path.length() - 4);
-            for (auto i = 0; i<name.length();i++){
-                if(name[i] == '/')
-                    name[i] = '_';
-            }
 
-            this->httpServer->router()->addRoute(key,name, path);
+            this->httpServer->router()->addRoute(key, path);
             // std::cout << "\t" << key << " ("<< name <<"): /" << path << std::endl;
             // this->httpServer->router()->addRoute("home", "api/home.lua");
         }
+
+        if(_devMode){
+            std::cout << "Dev mode enabled" << std::endl;
+            this->scriptEngine->setupWatchers();
+        }
+
         // Initialize the http server
         httpServer->init();
         auto running = true;
         // Run the main loop
-        std::cout <<"Listening http://localhost:"<<this->_port<< std::endl;
-        while (running)
-        {
+
+
+        // auto serverThread = boost::thread(boost::bind(&HttpServer::tick, this->httpServer));
+        // std::cout <<"Listening on http://localhost:"<<this->_port<< std::endl;
+        // serverThread.join();
+        scriptEngine->watchChanges();
+        std::cout << "Listening on http://localhost:" << this->_port << std::endl;
+        while(running){
             running = httpServer->tick();
         }
+        // for (auto kvp : scriptEngine->scripts())
+        // {
+        //     kvp.second.watcher->join();
+        // }
     }
     else{
         std::cout << "Can't load configuration (noon.config.lua not found)" << std::endl;
@@ -63,6 +68,7 @@ int App::run() {
 }
 
 ScriptEngine *App::script() { return scriptEngine; }
+
 void App::setDevMode(bool devMode) {
   this->_devMode = devMode;
 }

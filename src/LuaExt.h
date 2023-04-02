@@ -10,6 +10,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#include <math.h>
+
 #include "json.h"
 
 struct FetchResult {

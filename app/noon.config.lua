@@ -1,5 +1,5 @@
 -- Config file for the app
-appName = "Sample App"
+appName = "Sample App" 
 version = "1.0"
 routes = {
     ["/"] = "home.lua",

@@ -2,10 +2,14 @@
 APPNAME := noon
 
 # define the cpp compiler to use
-CXX := g++
+CXX := clang++
+
+CXX_VERSION := c++20
 
 # define the FLAGS
-FLAGS := -Wall -llua -std=c++20 -g
+FLAGS := -Wall -llua -lboost_filesystem -lboost_filesystem -lboost_chrono -lboost_thread  -g
+
+DEFINES := -DBOOST_NO_EXCEPTIONS
 
 # define bin directory
 BIN := build
@@ -65,7 +69,7 @@ else
 	@mkdir -p $(OBJ)
 endif
 	@echo $(CYAN)Compiling: $(RED)$(@F)$(RESET)
-	@$(CXX) -std=c++20 -I $(INC) -c $< -o $@
+	@$(CXX) -std=$(CXX_VERSION) $(DEFINES) -I $(INC) -c $< -o $@
 
 # Generate executable
 $(TARGET): $(OBJS)
