@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <filesystem>
+#include <boost/url.hpp>
 
 namespace fs = std;
 

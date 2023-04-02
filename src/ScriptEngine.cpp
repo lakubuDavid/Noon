@@ -70,9 +70,16 @@ bool ScriptEngine::registerFunction(std::string name, lua_CFunction function) {
 }
 bool ScriptEngine::loadModule(std::string filename) {
     //   scripts
+    if(!boost::filesystem::exists(filename))
+        return false;
     ScriptInfo info;
     info.path = filename;
+    try{
     info.last_write = boost::filesystem::last_write_time(info.path);
+}
+    catch(std::exception ex){
+        std::cerr << ex.what();
+    }
     _scripts[filename] = info;
     return luaL_dofile(this->L, filename.c_str()) == LUA_OK;
 }

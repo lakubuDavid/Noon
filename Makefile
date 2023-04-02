@@ -9,7 +9,7 @@ CXX_VERSION := c++20
 # define the FLAGS
 FLAGS := -Wall -llua -lboost_filesystem -lboost_filesystem -lboost_chrono -lboost_thread  -g
 
-DEFINES := -DBOOST_NO_EXCEPTIONS
+DEFINES :=
 
 # define bin directory
 BIN := build
@@ -71,6 +71,7 @@ endif
 	@echo $(CYAN)Compiling: $(RED)$(@F)$(RESET)
 	@$(CXX) -std=$(CXX_VERSION) $(DEFINES) -I $(INC) -c $< -o $@
 
+all:$(TARGET)
 # Generate executable
 $(TARGET): $(OBJS)
 ifeq ($(OS),Windows_NT)

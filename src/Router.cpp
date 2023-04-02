@@ -55,11 +55,12 @@ void Router::addRoute(std::string route, std::string filename) {
 EndpointMatch Router::getEndpoint(std::string path) {
     EndpointMatch match;
     string ppath = path;
-    int pos = path.find("%");
-    if (pos!= -1)
-    {
-      ppath = path.substr(0, pos);
-    }
+//    auto uri = boost::url(boost::urls::parse_uri(path).value());
+//    std::string main_url = uri.host() + uri.path();
+//    std::map<std::string, std::string> query_params;
+//    for (auto const& param : uri.params()) {
+//        query_params[param.key] = param.value;
+//    }
     // TODO : Parse query parameters
     // TODO : Implement dynamic routes
     // TODO : Implement catch all routes

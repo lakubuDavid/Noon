@@ -151,7 +151,7 @@ bool HttpServer::tick() {
             printf("Full path: %s\n", path.c_str());
 
             if (boost::filesystem::exists(path)) {
-                // FIXME : This should read and return a static file but I have no clue of how I'm supppsed to do it without segmentation faults 🥲
+                // FIXME : This should read and return a static file but I have no clue of how I'm supposed to do it without segmentation faults 🥲
             } else {
                 std::cout << "Error: Can't get route \"" << urlRoute << "\""
                           << std::endl;
@@ -177,16 +177,17 @@ bool HttpServer::tick() {
     http_header << "X-Powered-By:Lua 5.4" << std::endl;
     http_header << "\r\n\r\n";
 
-    std::string chttp_header = http_header.str();
+//    std::string chttp_header = http_header.str();
+    std::stringstream  resp;
+    resp << http_header.str() << response_data << "\r\n\r\n";
 
-    const size_t response_size =
-        strlen(chttp_header.c_str()) + strlen(response_data);
+    auto cresp = resp.str();
+
+    const size_t response_size =  strlen(cresp.c_str());
 
     char *response = (char *)malloc(response_size);
 
-    strcat(response, chttp_header.c_str());
-    strcat(response, response_data);
-    strcat(response, "\r\n\r\n");
+    strcat(response, cresp.c_str());
 
     // FIXME : The header disapears from the response when it's an html response
 
