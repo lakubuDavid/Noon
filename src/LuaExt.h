@@ -9,8 +9,9 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <map>
 
-#include <math.h>
+#include <cmath>
 
 #include "json.h"
 
@@ -19,10 +20,10 @@ struct FetchResult {
   char *error;
 };
 
-char *nativeServeStatic(std::string path);
+char *nativeServeStatic(const std::string& path);
 int serveStatic(lua_State *L);
 
-std::string nativeRenderTemplate(std::string path);
+std::string nativeRenderTemplate(const std::string& path,std::map<std::string,std::string> params,lua_State *L);
 int renderTemplate(lua_State *L);
 
 void jsonify_table(lua_State* L, json::jobject& obj);

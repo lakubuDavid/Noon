@@ -96,6 +96,8 @@ bool HttpServer::tick() {
     int status_code = 404;
     auto contentType = "text/plain; charset=utf-8";
 
+    if(strlen(urlRoute)==0)
+        urlRoute = "/";
     auto endpoint = this->router()->getEndpoint(urlRoute);
 
     // Serve a static file as an asset (only the server is allowed to access it)
@@ -106,11 +108,27 @@ bool HttpServer::tick() {
 
         // Call the lua endpoint
         // printf("Checking lua route:%s\n", urlRoute);
-        lua_getglobal(L, endpoint.path.c_str());
+        lua_getglobal(L, endpoint.endpoint.c_str());
         if (lua_istable(L, -1)) {
             lua_pushstring(L, method);
             lua_gettable(L, -2);
             if (lua_isfunction(L, -1)) {
+
+                lua_newtable(L);
+
+                lua_pushstring(L,"query");
+                lua_newtable(L);
+                for (auto const& pair : endpoint.parameters) {
+                    lua_pushstring(L, pair.first.c_str());
+                    lua_pushstring(L, pair.second.c_str());
+                    lua_settable(L, -3);
+                }
+                lua_settable(L, -3);
+
+
+
+                lua_setglobal(L, "request");
+
                 response_data = "";
                 lua_pushvalue(L, -2); // Push the table onto the stack
                 int status = lua_pcall(L, 1, 2, 0);
@@ -138,7 +156,7 @@ bool HttpServer::tick() {
                     const char *errorMsg = lua_tostring(
                         L, -1);    // Get the error message from the stack
                     lua_pop(L, 1); // Pop the error message from the stack
-                    std::cerr << errorMsg << std::endl;
+                    std::cerr << "[lua] : " << errorMsg << std::endl;
                 }
             } else {
                 std::cout << "Error: Can't call method " << method
@@ -163,7 +181,7 @@ bool HttpServer::tick() {
 
     std::stringstream http_header;
 
-    if (strlen(response_data) >= 1) {
+    if (response_data!=NULL && strlen(response_data) >= 1) {
         if (response_data[0] == '<') {
             contentType = "text/html; charset=utf-8";
         } else if (response_data[0] == '{') {
@@ -188,10 +206,6 @@ bool HttpServer::tick() {
     char *response = (char *)malloc(response_size);
 
     strcat(response, cresp.c_str());
-
-    // FIXME : The header disapears from the response when it's an html response
-
-    printf("%s",response);
 
     send(this->_clientSocket, response, response_size, 0);
     close(this->_clientSocket);

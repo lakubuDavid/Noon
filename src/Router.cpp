@@ -5,21 +5,6 @@ using namespace std;
 
 Router::Router(App *app) { this->app = app; }
 
-// void Router::addApiRoute(std::string name, std::string filename)
-// {
-//     // 1. Load the lua script
-//     auto script = this->app->script();
-//     script->loadModule(filename);
-//     // 2. Register the api route
-//     std::string endpoint = "/"+ name;
-
-//     for (auto i = 0; i<endpoint.length();i++){
-//         if(endpoint[i] == '.')
-//             endpoint[i] = '/';
-//     }
-//     routes.insert(std::make_pair(endpoint,name));
-// }
-
 void Router::addRoute(std::string route, std::string filename) {
     auto name = filename.substr(0, filename.length() - 4);
     for (auto i = 0; i < name.length(); i++) {
@@ -53,22 +38,52 @@ void Router::addRoute(std::string route, std::string filename) {
    pass the rest as a sub route parameter like
  */
 EndpointMatch Router::getEndpoint(std::string path) {
-    EndpointMatch match;
-    string ppath = path;
-//    auto uri = boost::url(boost::urls::parse_uri(path).value());
-//    std::string main_url = uri.host() + uri.path();
-//    std::map<std::string, std::string> query_params;
-//    for (auto const& param : uri.params()) {
-//        query_params[param.key] = param.value;
-//    }
+    EndpointMatch match = parseUrl(path);
     // TODO : Parse query parameters
     // TODO : Implement dynamic routes
     // TODO : Implement catch all routes
 
-    if (this->routes.find(path) != this->routes.end()) {
-        match.path = routes[path];
+    if (this->routes.find(match.path) != this->routes.end()) {
+        match.endpoint = routes[match.path];
     } else {
-        match.path = "404";
+        match.endpoint = "404";
     }
+    return match;
+}
+
+std::map<std::string, std::string> Router::parse_query_string(const std::string& query_string) {
+    std::map<std::string, std::string> query_params;
+    size_t pos = 0;
+    while (pos < query_string.length()) {
+        size_t key_start = pos;
+        size_t key_end = query_string.find('=', key_start);
+        if (key_end == std::string::npos) {
+            break;
+        }
+        size_t value_start = key_end + 1;
+        size_t value_end = query_string.find('&', value_start);
+        if (value_end == std::string::npos) {
+            value_end = query_string.length();
+        }
+        std::string key = query_string.substr(key_start, key_end - key_start);
+        std::string value = query_string.substr(value_start, value_end - value_start);
+        for(int i = 0; i < value.length();i++){
+            if(value[i] == '+')
+                value[i] = ' ';
+        }
+        query_params[key] = value;
+        pos = value_end + 1;
+    }
+    return query_params;
+}
+
+EndpointMatch Router::parseUrl(const string &url) {
+    EndpointMatch  match;
+    auto pos = url.find('?');
+    auto main_url = url.substr(0,pos);
+    auto params = parse_query_string(url.substr(pos + 1));
+    match.url = url;
+    match.path = main_url;
+    match.parameters = params;
     return match;
 }

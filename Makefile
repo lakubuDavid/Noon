@@ -10,6 +10,7 @@ CXX_VERSION := c++20
 FLAGS := -Wall -llua -lboost_filesystem -lboost_filesystem -lboost_chrono -lboost_thread  -g
 
 DEFINES :=
+#-DBOOST_NO_EXCEPTIONS
 
 # define bin directory
 BIN := build
@@ -69,7 +70,7 @@ else
 	@mkdir -p $(OBJ)
 endif
 	@echo $(CYAN)Compiling: $(RED)$(@F)$(RESET)
-	@$(CXX) -std=$(CXX_VERSION) $(DEFINES) -I $(INC) -c $< -o $@
+	@$(CXX) -g -std=$(CXX_VERSION) $(DEFINES) -I $(INC) -c $< -o $@
 
 all:$(TARGET)
 # Generate executable
