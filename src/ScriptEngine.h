@@ -20,7 +20,7 @@ class ScriptEngine {
     lua_State *L;
     // static ScriptEngine* instance;
     std::map<std::string, ScriptInfo> _scripts;
-    void watchFile(const std::string path);
+    void watchFile(const std::string& path);
 
   public:
     ScriptEngine();
@@ -30,10 +30,12 @@ class ScriptEngine {
     void watchChanges();
     void setupWatchers();
 
-    bool loadModule(std::string filename);
+    bool loadModule(const std::string& filename);
     bool loadModuleS(std::string script_content);
 
-    bool registerFunction(std::string name, lua_CFunction function);
+    void reload();
+
+    bool registerFunction(const std::string& name, lua_CFunction function);
 
     int getInt(std::string name);
     float getFloat(std::string name);

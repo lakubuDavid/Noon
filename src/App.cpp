@@ -26,7 +26,7 @@ int App::run() {
         std::cout << "\n Initializing routes" << std::endl;
 
         auto routes = scriptEngine->getTable("routes");
-
+        scriptEngine->close();
         for(auto it = routes.begin(); it != routes.end();it++){
             auto key = it->first;
             auto path = it->second;
@@ -37,10 +37,10 @@ int App::run() {
             // this->httpServer->router()->addRoute("home", "api/home.lua");
         }
 
-        if(_devMode){
-            std::cout << "Dev mode enabled" << std::endl;
-            this->scriptEngine->setupWatchers();
-        }
+//        if(_devMode){
+//            std::cout << "Dev mode enabled" << std::endl;
+//            this->scriptEngine->setupWatchers();
+//        }
 
         // Initialize the http server
         httpServer->init();
@@ -51,7 +51,7 @@ int App::run() {
         // auto serverThread = boost::thread(boost::bind(&HttpServer::tick, this->httpServer));
         // std::cout <<"Listening on http://localhost:"<<this->_port<< std::endl;
         // serverThread.join();
-        scriptEngine->watchChanges();
+//        scriptEngine->watchChanges();
         std::cout << "Listening on http://localhost:" << this->_port << std::endl;
         while(running){
             running = httpServer->tick();

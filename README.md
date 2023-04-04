@@ -16,18 +16,18 @@ It doesn't use any tenplating engine so everything is done in good 'ole HTML.
 
 Here are the main steps of the projects that I will be implementing to consider it a "fullish" web server/framework :
 
-- Returning HTML page ***(done)*** ✅
-- Returning JSON objects ***(done)*** ✅
-- Handling requests body/form ***(not implemented)*** ❌
-- Handling requests cookies ***(not implemented)*** ❌
-- Handling requests sessions ***(not implemented)*** ❌
-- Add middlewares ***(not implemented)*** ❌
-- Have  a full routing system ***(partially | in progress)*** ✔️👷🏾
-  - Static routes   ***(done)*** ✅
-  - Parameters ***(not implemented)*** ❌
-  - Dynamic routes ***(not implemented)*** ❌
-- Fetching data from the web ***(not implemented | in progress)*** ❌👷🏾
-- Serving static files  ***(not implemented | in progress)*** ❌👷🏾
+- [x] Returning HTML page ***(done)*** ✅
+- [x] Returning JSON objects ***(done)*** ✅
+- [x] Handling requests body/form ***(not implemented)*** ❌
+- [ ] Handling requests cookies ***(not implemented)*** ❌
+- [ ] Handling requests sessions ***(not implemented)*** ❌
+- [ ] Add middlewares ***(not implemented)*** ❌
+- [ ] Have  a full routing system ***(partially | in progress)*** ✔️👷🏾
+  - [x] Static routes   ***(done)*** ✅
+  - [x] Parameters ***(not implemented)*** ❌
+  - [ ] Dynamic routes ***(not implemented)*** ❌
+- [ ] Fetching data from the web ***(not implemented | in progress)*** ❌👷🏾
+- [ ] Serving static files  ***(not implemented | in progress)*** ❌👷🏾
 - ***Maybe*** add a templating engine ***(maybe)*** 🤷🏾‍♂️
 
 ## Using it

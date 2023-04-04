@@ -5,5 +5,6 @@ routes = {
     ["/"] = "home.lua",
     ["/api/hello"] = "api/hello.lua",
     ["/api/fetch"] = "api/fetch.lua",
-    ["/api/query"] = "api/query.lua"
+    ["/api/query"] = "api/query.lua",
+    ["/api/post"] = "api/post.lua"
 }

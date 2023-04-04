@@ -1,6 +1,5 @@
-api_fetch = {}
 
-function api_fetch.GET()
+function GET()
     local data = fetch("https://jsonplaceholder.typicode.com/todos/1","GET","")
     local status = 200
     local response

@@ -6,22 +6,22 @@ using namespace std;
 Router::Router(App *app) { this->app = app; }
 
 void Router::addRoute(std::string route, std::string filename) {
-    auto name = filename.substr(0, filename.length() - 4);
-    for (auto i = 0; i < name.length(); i++) {
-        if (name[i] == '/')
-            name[i] = '_';
-    }
+//    auto name = filename.substr(0, filename.length() - 4);
+//    for (auto i = 0; i < name.length(); i++) {
+//        if (name[i] == '/')
+//            name[i] = '_';
+//    }
 
-    std::cout << "Adding route " << route << "\n\tname:" << name
+    std::cout << "Adding route " << route
               << "\n\tpath:" << filename << std::endl;
     // 1. Load the lua script
-    auto script = this->app->script();
-    if (script->loadModule("routes/" + filename)) {
-        // 2. Register the api route
-        routes.insert(std::make_pair(route, name));
-    } else {
-        std::cout << "Can't load " << filename << std::endl;
-    }
+//    auto script = this->app->script();
+    routes.insert(std::make_pair(route, filename));
+//    if (script->loadModule("routes/" + filename)) {
+//        // 2. Register the api route
+//    } else {
+//        std::cout << "Can't load " << filename << std::endl;
+//    }
 }
 /*
    Synopsis: we have different types of routes:

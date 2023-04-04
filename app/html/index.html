@@ -12,7 +12,7 @@
 <div class="container">
     <h1>NOON</h1>
     <h2>A Lua framework</h2>
-    Hello {{name}}
+    Hello dear {{name}}
     <div>
         <button id="btn" class="btn">Count :: 0</button><br>
     </div>
@@ -22,6 +22,7 @@
 <style>
     * {
         font-family: "Helvetica Neue", sans-serif;
+        --accent-color:#78bff2;
     }
 
     body {
@@ -31,6 +32,14 @@
 
     h1 {
         font-size: 2em;
+        transition: all 500ms ease;
+        padding: 20px 70px;
+        /*border: 1px solid #0000;*/
+        border-radius: 20px;
+    }
+    h1:hover{
+        /*border-color:#0003;*/
+        letter-spacing: 5px;
     }
 
     h2,
@@ -61,12 +70,12 @@
 
     .btn:hover {
         letter-spacing: 1px;
-        border: 2px solid #78bff2;
-        color: #78bff2;
+        border: 2px solid var(--accent-color);
+        color: var(--accent-color);
     }
     .btn:active{
         background-color: #0001;
-        border: 3px solid #78bff2;
+        border: 3px solid var(--accent-color);
     }
 </style>
 <script>

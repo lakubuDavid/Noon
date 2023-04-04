@@ -72,7 +72,7 @@ std::string nativeRenderTemplate(const std::string &path, map<string, string> pa
                           << " " << debug_info.what << endl;
                 cerr << lua_tostring(L, -1) << endl;
                 lua_pop(L, -1);
-                result = "$$ERROR$$";
+                result += "$$ERROR$$";
             }
             //Push the result in the html
             html_s.replace(prev_pos, pos - prev_pos + 2, result);
@@ -196,20 +196,60 @@ int json_to_lua(lua_State *L) {
     if (!lua_isstring(L, -1)) {
         return 0;
     }
-    lua_newtable(L);
     string json_str = lua_tostring(L, -1);
     // Parse the JSON string
-    json::jobject json = json::jobject::parse(json_str);
-
-    for (int i = 0; i < json.size(); i++) {
-    }
-
+    auto json = nlohmann::json::parse(json_str);
+    lua_newtable(L);
+    json_object_to_lua(L,json);
     return 1;
 }
 
-void json_array_to_lua(lua_State *L, json::jobject &json_array) {}
+void json_array_to_lua(lua_State *L, nlohmann::json& json_array) {}
 
-void json_object_to_lua(lua_State *L, json::jobject &json_obj) {}
+void json_object_to_lua(lua_State *L, nlohmann::json& json) {
+    for(auto el:json.items()) {
+        lua_pushstring(L, el.key().c_str());
+        int i;
+        switch(el.value().type()){
+            case nlohmann::json::value_t::boolean:
+                lua_pushboolean(L, el.value());
+                break;
+            case nlohmann::json::value_t::number_integer:
+                lua_pushinteger(L, el.value());
+                break;
+            case nlohmann::json::value_t::number_unsigned:
+                lua_pushinteger(L, el.value());
+                break;
+            case nlohmann::json::value_t::number_float:
+                lua_pushnumber(L, el.value());
+                break;
+            case nlohmann::json::value_t::string:
+                lua_pushstring(L, el.value().get<std::string>().c_str());
+                break;
+            case nlohmann::json::value_t::array:
+                lua_newtable(L);
+                i = 1;
+                for(auto sub_el:el.value().items()){
+                    json_object_to_lua(L,sub_el.value());
+                    lua_rawseti(L, -2, i);
+                    i++;
+                }
+                break;
+            case nlohmann::json::value_t::object:
+                lua_newtable(L);
+                for(auto sub_el:el.value().items()){
+                    lua_pushstring(L,sub_el.key().c_str());
+                    json_object_to_lua(L,sub_el.value());
+                    lua_settable(L,-3);
+                }
+                break;
+            case nlohmann::json::value_t::null:
+                lua_pushnil(L);
+                break;
+        }
+        lua_settable(L,-3);
+    }
+}
 
 char *nativeFetch(std::string url, std::string method, std::string data) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);

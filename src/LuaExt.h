@@ -14,6 +14,7 @@
 #include <cmath>
 
 #include "json.h"
+#include <nlohmann/json.hpp>
 
 struct FetchResult {
   char *data;
@@ -29,9 +30,10 @@ int renderTemplate(lua_State *L);
 void jsonify_table(lua_State* L, json::jobject& obj);
 int jsonify(lua_State *L);
 
-void json_to_lua(lua_State* L, std::string json_str);
-void json_array_to_lua(lua_State* L, json::jobject& json_array);
-void json_object_to_lua(lua_State *L, json::jobject &json_obj);
+int json_to_lua(lua_State* L);
+void json_array_to_lua(lua_State* L, nlohmann::json& json_array);
+void json_object_to_lua(lua_State *L, nlohmann::json& json_obj);
+//int parseJson(lua_State *L);
 
 char *nativeFetch(std::string url,std::string method,std::string data="");
 int fetch(lua_State* L);

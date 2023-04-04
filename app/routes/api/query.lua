@@ -4,9 +4,7 @@
 --- DateTime: 03/04/2023 12:18
 ---
 
-api_query = {}
-
-function api_query.GET()
+function GET()
     print(request)
     return jsonify(request)
 end
