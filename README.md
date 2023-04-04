@@ -43,7 +43,8 @@ The project is composed like this :
     noon(.exe)      -- The server executable
     noon.config.lua -- The configuration file
     routes/         -- Contains the routes
-    static/         -- Contains all the static files (not implemented)
+    -- NOT IMPLEMENTED
+    static/         -- Contains all the static files
 ```
 
 
@@ -63,33 +64,26 @@ routes= {
 }
 ```
 
-### Creating a route
+### Creating a route \[UPDATED\]
 
-Routes are defined in the routes folder, as lua tables that have the same name as the full file path (from the routes directory) with the `'/'` replaced by `'_'`
-
-> eg: `routes/api/auth/login.lua` will define a table called `api_auth_login`
-
-This table will contain functions corresponding to the request method.The function must returns the response (html or json) and the status code
+Routes are defined in the routes folder as lua  scripts that contains functions corresponding to the http methods they respond to
 
 ```lua
 -- index.lua
 
-index = {}
-
-function index.GET()
-    return renderTemplate("/html/index.html"),200
+function GET()
+    local context = {}
+    return renderTemplate("/html/index.html",context),200
 end
 
-function index.POST()
+function POST()
     ...
 end
 
 ...
 -- /api/hello.lua
 
-api_hello = {}
-
-function api_hello.GET()
+function GET()
     local data = {
         firstName = "John",
         lastName = "Doe"
@@ -98,7 +92,7 @@ function api_hello.GET()
     return jsonify(data),200
 end
 
-function api_hello.POST()
+function POST()
     ...
 end
 
