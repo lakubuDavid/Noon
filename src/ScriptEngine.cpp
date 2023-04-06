@@ -1,23 +1,64 @@
 #include "ScriptEngine.h"
 #include "App.h"
 
-ScriptEngine::ScriptEngine() {
+ScriptEngine::ScriptEngine(App* app):_app(app) {
     this->L = luaL_newstate();
     luaL_openlibs(this->L);
 }
 
 void ScriptEngine::init() {
-    this->L = luaL_newstate();
-    luaL_openlibs(this->L);
+    open();
 
-    registerFunction("renderTemplate", renderTemplate);
-    registerFunction("serveStatic", serveStatic);
-    registerFunction("fetch", fetch);
-    registerFunction("jsonify", jsonify);
-    registerFunction("parseJson",json_to_lua);
+    // Common functions
+    {
+        registerFunction("renderTemplate", renderTemplate);
+        registerFunction("serveStatic", serveStatic);
+        registerFunction("fetch", fetch);
+        registerFunction("jsonify", jsonify);
+        registerFunction("parseJson", json_to_lua);
+    }
+
+    //Middleware functions
+    {
+        registerFunction("useMiddleware", useMiddleware);
+        registerFunction("continue", middlewareContinue);
+        registerFunction("abort", middlewareAbort);
+        registerFunction("redirect", middlewareRedirect);
+    }
+
+    //We set up the global context table that will be used by middleware and other parts of the server
+    {
+        lua_newtable(L);
+
+        //Middleware stuff
+        {
+            lua_pushstring(L, "middleware");
+            lua_newtable(L);
+
+            //Add the middleware stack
+            {
+                lua_pushstring(L, "stack");
+                lua_newtable(L);
+                lua_settable(L, -3);
+            }
+
+            lua_settable(L, -3);
+        }
+        lua_setglobal(L, "___context");
+    }
+
 }
 
-void ScriptEngine::close() { lua_close(this->L); }
+void ScriptEngine::open(){
+    this->L = luaL_newstate();
+    luaL_openlibs(this->L);
+    _isOpen = true;
+}
+
+void ScriptEngine::close() {
+    lua_close(this->L);
+    _isOpen =false;
+}
 
 void ScriptEngine::watchChanges() {
     printf("Watching changes\n");
@@ -33,12 +74,12 @@ void ScriptEngine::setupWatchers() {
     for (auto kvp: this->_scripts) {
         printf("added script %s to watch\n", kvp.first.c_str());
         auto t = new boost::thread(
-                [this, capture0 = kvp.first] { watchFile(capture0); });
+                [this, capture0 = kvp.first] { _watchFile(capture0); });
         kvp.second.watcher = t;
     };
 }
 
-void ScriptEngine::watchFile(const std::string& path) {
+void ScriptEngine::_watchFile(const std::string& path) {
     printf("[debug] Watching %s\n", path.c_str());
     while (true) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
@@ -153,6 +194,36 @@ void ScriptEngine::reload() {
     for (auto [path, info]: this->scripts()) {
         luaL_dofile(L, path.c_str());
     }
+}
+
+FileInfo ScriptEngine::watchFile(const std::string &path, FileChangeCallback onChangeCallback) {
+    FileInfo info;
+    info.path = path;
+    info.last_write = boost::filesystem::last_write_time(path);
+    auto t = new boost::thread(
+            [this, file = &info,callback = onChangeCallback] {
+                printf("Watching %s for changes...\n", file->path.c_str());
+                while (true) {
+                    sleep(100);
+//                    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+                    if (boost::filesystem::exists(file->path)) {
+                        auto last_write_time = boost::filesystem::last_write_time(file->path);
+                        if (file->last_write < last_write_time) {
+                            file->last_write = last_write_time;
+
+                            printf("%s was changed\n", file->path.c_str());
+                            callback(*file);
+                            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+                        }
+                    } else {
+                        printf("%s was removed\n", file->path.c_str());
+                        std::terminate();
+                    }
+                }
+            });
+//    t->join();
+    info.watcher = t;
+    return info;
 }
 
 // ScriptEngine *ScriptEngine::getInstance()

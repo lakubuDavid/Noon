@@ -1,6 +1,6 @@
 
 function GET()
-    local data = fetch("https://jsonplaceholder.typicode.com/todos/1","GET","")
+    local data = fetch("https://jsonplaceholder.cypress.io/todos/1","GET","")
     local status = 200
     local response
     if(data == nil) then

@@ -173,8 +173,6 @@ void jsonify_table(lua_State *L, json::jobject &obj) {
                 jsonify_table(L, sub_obj);
                 obj[key] = sub_obj;
                 break;
-                // default:
-                // break;
         }
         lua_pop(L, 1);
     }
@@ -264,8 +262,16 @@ char *nativeFetch(std::string url, std::string method, std::string data) {
 
     pos = url.find("/");
     string host = url.substr(0, pos);
-
-    string port = url.substr(url.find(":"), pos - url.find(":"));
+    auto colon_pos = url.find(":");
+    string port;
+    if(colon_pos != string::npos)
+        port = url.substr(colon_pos, pos - colon_pos);
+    else {
+        if(protocol == "http")
+            port = "80";
+        else if(protocol == "https")
+            port = "443";
+    }
     int porti = 0;
     int s = port.size();
     for (int i = 0; i < s; i++) {
@@ -307,15 +313,19 @@ char *nativeFetch(std::string url, std::string method, std::string data) {
 
         porti += n * pow(10, s - i - 1);
     }
-    printf("port %s | %d\n", port.c_str(), porti);
     string path = url.substr(pos);
     printf("[fetch] : Fetching %s from %s | %s on port %d\n", path.c_str(), host.c_str(),
            method.c_str(), porti);
 
     struct sockaddr_in server;
-    server.sin_addr.s_addr = inet_addr(host.c_str());
+//    server.sin_addr.s_addr = inet_addr(host.c_str());
     server.sin_family = AF_INET;
     server.sin_port = htons(porti);
+
+    if (inet_pton(AF_INET, host.c_str(), &server.sin_addr) <= 0) {
+        std::cerr << "Invalid address/ Address not supported" << std::endl;
+        return NULL;
+    }
 
     if (connect(sock, (struct sockaddr *) &server, sizeof(server)) < 0) {
         cerr << "[fetch] : Connection failed" << endl;

@@ -27,6 +27,7 @@ class Router
   std::map<std::string, std::string> routes;
 public:
   Router(App *app);
+  void clear();
 
   /// @brief Add a new api route to the server
   /// @param route Route to the endpoint

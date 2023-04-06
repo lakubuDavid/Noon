@@ -15,16 +15,21 @@ class App {
     HttpServer *httpServer;
 
     int _port = 8080;
-    bool _devMode = false;
+    bool _debugMode = false;
+    static App* instance;
+    bool running;
 public:
     App(int port=8080);
     virtual ~App();
-    void renderTemplate(std::string template_name, void *context);
 
     int run();
     ScriptEngine* script();
 
-    void setDevMode(bool devMode);
+    void setDebugMode(bool devMode);
+
+    bool loadConfig();
+
+    static void onConfigChanged(FileInfo info);
 };
 
 #endif

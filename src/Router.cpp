@@ -87,3 +87,7 @@ EndpointMatch Router::parseUrl(const string &url) {
     match.parameters = params;
     return match;
 }
+
+void Router::clear() {
+    routes.clear();
+}

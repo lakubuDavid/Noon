@@ -9,6 +9,7 @@
 #include <boost/thread.hpp>
 
 #include "LuaExt.h"
+#include "Middlewares.h"
 
 class App;
 typedef struct ScriptInfo {
@@ -16,19 +17,29 @@ typedef struct ScriptInfo {
   boost::thread *watcher = nullptr;
   time_t last_write;
 } ScriptInfo;
+
+typedef struct ScriptInfo FileInfo;
+
+typedef void (*FileChangeCallback) (FileInfo file);
+
 class ScriptEngine {
+    App* _app;
     lua_State *L;
     // static ScriptEngine* instance;
     std::map<std::string, ScriptInfo> _scripts;
-    void watchFile(const std::string& path);
+    void _watchFile(const std::string& path);
 
+    bool _isOpen = false;
   public:
-    ScriptEngine();
+    ScriptEngine(App* app);
 
     void init();
+    void open();
     void close();
+    [[nodiscard]] bool isOpen() const { return _isOpen; }
     void watchChanges();
     void setupWatchers();
+    FileInfo watchFile(const std::string& path, FileChangeCallback onChangeCallback);
 
     bool loadModule(const std::string& filename);
     bool loadModuleS(std::string script_content);

@@ -4,6 +4,6 @@
 
 int main(int argc, char** argv){
   App app;
-  app.setDevMode(true);
+    app.setDebugMode(true);
   return app.run();
 }

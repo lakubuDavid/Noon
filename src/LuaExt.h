@@ -21,6 +21,11 @@ struct FetchResult {
   char *error;
 };
 
+typedef struct{
+    void *data;
+    int type;
+} LuaObject;
+
 char *nativeServeStatic(const std::string& path);
 int serveStatic(lua_State *L);
 

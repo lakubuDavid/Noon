@@ -83,7 +83,6 @@ bool HttpServer::tick() {
     int header_parse_counter = 0;
 
     while (header_token != NULL) {
-
         switch (header_parse_counter) {
             case 0:
                 method = header_token;
@@ -106,9 +105,7 @@ bool HttpServer::tick() {
         }
     }
 
-
     char *response_data = "<html><body>404</body></html>";
-    bool shouldFreeResponseData = false;
     int status_code = 404;
     auto contentType = "text/plain; charset=utf-8";
 
@@ -122,27 +119,22 @@ bool HttpServer::tick() {
         _app->script()->init();
         lua_State *L = _app->script()->getLuaState();
 
-        // So basically, I used to preload all the routes,put them in a table with a "unique" name and check if it exists for every request
-        // But I've decided that its to complicated, so I will load the script only when I need it and then close everything to keep things simple
-        // and isolated, so I have commented most of that old code if you want to experiment with that way of doing things
-
-        // Call the lua endpoint
-        // printf("Checking lua route:%s\n", urlRoute);
-//        lua_getglobal(L, endpoint.endpoint.c_str());
-//        if (lua_istable(L, -1)) {
         if (boost::filesystem::exists("routes/" + endpoint.endpoint)) {
             if(_app->script()->loadModule("routes/" + endpoint.endpoint)) {
-
+                // Create and push the request object that will contain information about requests
                 lua_newtable(L);
-                lua_pushstring(L, "query");
-                lua_newtable(L);
-                for (auto const &pair: endpoint.parameters) {
-                    lua_pushstring(L, pair.first.c_str());
-                    lua_pushstring(L, pair.second.c_str());
+                //Query parameters
+                {
+                    lua_pushstring(L, "query");
+                    lua_newtable(L);
+                    for (auto const &pair: endpoint.parameters) {
+                        lua_pushstring(L, pair.first.c_str());
+                        lua_pushstring(L, pair.second.c_str());
+                        lua_settable(L, -3);
+                    }
                     lua_settable(L, -3);
                 }
-                lua_settable(L, -3);
-
+                //If POST or PUT, body parameter
                 if (strcmp(method, "POST") == 0 || strcmp(method, "PUT") == 0) {
                     auto req = std::string(reqv);
                     int pos = req.find('{');
@@ -152,21 +144,64 @@ bool HttpServer::tick() {
                         lua_pushstring(L, "body");
                         lua_newtable(L);
                         json_object_to_lua(L, json_data);
-//                        lua_pushstring(L, post_data.c_str());
                         lua_settable(L, -3);
-
-//                        lua_settable(L, -3);
                     }
+                }
+                //Route parameters
+                {
+                    lua_pushstring(L, "path");
+                    lua_pushstring(L, endpoint.path.c_str());
+                    lua_settable(L, -3);
+
+                    lua_pushstring(L, "url");
+                    lua_pushstring(L, endpoint.url.c_str());
+                    lua_settable(L, -3);
                 }
 
                 lua_setglobal(L, "request");
 
+                // Now we have to handle middlewares
+
+                // 1. Get all the middlewares from the global ___context table
+                lua_getglobal(L,"___context");
+                lua_getfield(L,-1,"middleware");
+                lua_getfield(L,-1,"stack");
+                std::vector<std::string> middlewares;
+                lua_pushnil(L);
+                while (lua_next(L, -2) != 0) {
+                    if(!lua_isstring(L, -1)) {
+                        break;
+                    }
+                    std::string value = lua_tostring(L, -1);
+                    // printf("%s: %s\n", key, value);
+                    middlewares.push_back(value);
+                    lua_pop(L, 1);
+                }
+                lua_pop(L, 1);
+
+                // 2. We load and execute each one of them
+                for(const auto& middleware : middlewares){
+                    luaL_dofile(L,middleware.c_str());
+                    lua_getglobal(L,"RouteHandler");
+                    if(lua_isfunction(L,-1)){
+                        // We push the middleware parameters
+                        lua_getglobal(L,"___middleware_params");
+                        lua_pcall(L,1,1,0);
+                        auto result =(MiddlewareResult) lua_tointeger(L,-2);
+
+                        if(result == MIDDLEWARE_RESULT_ABORT){
+                            // We need to abort and return the error code
+                            sendResponse(response_data,contentType,status_code);
+                            return true;
+                        }else if(result == MIDDLEWARE_RESULT_REDIRECT){
+                            // TODO
+                        }
+                    }
+                }
 
                 lua_getglobal(L, method);
-//            lua_gettable(L, -2);
                 if (lua_isfunction(L, -1)) {
                     response_data = "";
-//                    lua_pushvalue(L, -2); // Push the table onto the stack
                     int status = lua_pcall(L, 0, 2, 0);
                     if (status == LUA_OK) {
                         if (lua_isstring(L, -2)) {
@@ -188,48 +223,50 @@ bool HttpServer::tick() {
                         }
                         lua_pop(L, -2);
 
-                    } else {
+                        if (response_data != NULL && strlen(response_data) >= 1) {
+                            if (response_data[0] == '<') {
+                                contentType = "text/html; charset=utf-8";
+                            } else if (response_data[0] == '{') {
+                                contentType = "application/json";
+                            }
+                        }
+                    }
+                    else {
                         const char *errorMsg = lua_tostring(
                                 L, -1);    // Get the error message from the stack
                         lua_pop(L, 1); // Pop the error message from the stack
-//                        lua_Debug debug_info;
-//                        lua_getstack(L, 1, &debug_info);
-//                        lua_getinfo(L, "Sl", &debug_info);
                         std::cerr << "[lua] : " << errorMsg << std::endl;
                     }
                 } else {
-                    std::cout << "Error: Can't call method " << method
-                              << " on route " << endpoint.path << std::endl;
+                    std::cout << "Error: Can't call method " << method << " on route " << endpoint.path << std::endl;
                 }
             }else{
-                std::cerr << "[lua] : Can't load route "<<urlRoute<<" at /routes/"<<endpoint.endpoint << std::endl;
+                std::cerr << "[lua] : Can't find route "<<urlRoute<<" at /routes/"<<endpoint.endpoint << std::endl;
             }
-        } else {
-//            printf("Checking static file:%s\n", urlRoute);
-//
-//            std::string path = std::string("./static") + urlRoute;
-//            printf("Full path: %s\n", path.c_str());
-//
-//            if (boost::filesystem::exists(path)) {
-//                // FIXME : This should read and return a static file but I have no clue of how I'm supposed to do it without segmentation faults 🥲
-//            } else {
-                std::cout << "Error: Can't get route \"" << urlRoute << "\""
-                          << std::endl;
-//            }
+        }
+        else {
+            // FIXME : This should read and return a static file but I have no clue of how I'm supposed to do it without segmentation faults 🥲
         }
     }
 
     // Return the response data
 
+
+
+    sendResponse(response_data,contentType,status_code);
+
+//    if (shouldFreeResponseData) {
+//        free(response_data);
+//        shouldFreeResponseData = false;
+//    }
+    return true;
+}
+
+Router *HttpServer::router() { return this->_router; }
+
+void HttpServer::sendResponse(const std::string &response_data, const std::string &contentType, int status_code) {
     std::stringstream http_header;
 
-    if (response_data != NULL && strlen(response_data) >= 1) {
-        if (response_data[0] == '<') {
-            contentType = "text/html; charset=utf-8";
-        } else if (response_data[0] == '{') {
-            contentType = "application/json";
-        }
-    }
     http_header << "HTTP/1.1 " << status_code << " "
                 << getStatusMessage(status_code) << std::endl;
     http_header << "Content-Type: " << contentType << std::endl;
@@ -237,11 +274,10 @@ bool HttpServer::tick() {
     http_header << "X-Powered-By:Lua 5.4" << std::endl;
     http_header << "\r\n\r\n";
 
-//    std::string chttp_header = http_header.str();
     std::stringstream resp;
     resp << http_header.str() << response_data << "\r\n\r\n";
 
-    auto cresp = resp.str();
+    std::string cresp = resp.str();
 
     const size_t response_size = strlen(cresp.c_str());
 
@@ -252,12 +288,5 @@ bool HttpServer::tick() {
     send(this->_clientSocket, response, response_size, 0);
     _app->script()->close();
     close(this->_clientSocket);
-    if (shouldFreeResponseData) {
-        free(response_data);
-        shouldFreeResponseData = false;
-    }
     free(response);
-    return true;
 }
-
-Router *HttpServer::router() { return this->_router; }

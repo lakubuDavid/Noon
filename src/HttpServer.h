@@ -43,6 +43,7 @@ public:
     Router* router();
     // Called in the main loop
     bool tick();
+    void sendResponse(const std::string& response_data, const std::string& contentType, int status_code);
 };
 
 #endif

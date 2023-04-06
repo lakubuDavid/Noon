@@ -1,4 +1,12 @@
-POST http://localhost:8080/api/post
+GET http://localhost:8080/api/fetch?id=99
+Accept: application/json
+
+###
+GET http://localhost:8080/api/middlewares?id=99
+Accept: application/json
+
+###
+POST http://localhost:8080/api/post?name=BOB&age=26
 Content-Type: application/json
 
 {"hello": "world"}
