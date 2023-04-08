@@ -22,12 +22,13 @@ Here are the main steps of the projects that I will be implementing to consider 
 - [ ] Handling requests cookies ***(not implemented)*** ❌
 - [ ] Handling requests sessions ***(not implemented)*** ❌
 - [x] Add middlewares ***(done)*** ✅
-- [ ] Have  a full routing system ***(partially | in progress)*** ✔️👷🏾
+- [ ] Have  a full routing system ***(partially | in progress)*** 🟨️👷🏾
   - [x] Static routes   ***(done)*** ✅
   - [x] Parameters ***(not implemented)*** ❌
   - [ ] Dynamic routes ***(not implemented)*** ❌
 - [ ] Fetching data from the web ***(not implemented | in progress)*** ❌👷🏾
-- [ ] Serving static files  ***(not implemented | in progress)*** ❌👷🏾
+- [ ] Serving static files  ***(partially implemented | in progress)*** 🟨 👷🏾
+- [ ] **HTTPS Support** ***(not implemented)*** ❌
 - ***Maybe*** add a templating engine ***(maybe)*** 🤷🏾‍♂️
 
 ## Using it
@@ -114,12 +115,12 @@ I'm currently trying to implement data fetching and static file serving, but I c
 
 ## Build requirements
 
-Here is a list of third party requirements that you may need to build it:
+Here is a list all the libraries that you will need to build it:
 
-- Lua 5.4
-- Boost 1.81
-- Openssl 3.1.0
-- nlohmann's json library
+- [Lua 5.4](https://www.lua.org/download.html)
+- [Boost 1.81](https://www.boost.org)
+- [Openssl 3.1](https://www.openssl.org/source/)
+- [JSON for modern C++](https://github.com/nlohmann/json)
 
 ## Contact me
 
