@@ -2,8 +2,8 @@
 #include "App.h"
 
 #include "LuaExt.h"
-#include "lua.h"
 #include "lua.hpp"
+#include "StaticFile.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
@@ -45,12 +45,45 @@ HttpServer::HttpServer(int port, App *app) {
 }
 
 void HttpServer::init() {
+    int err;
+    //Initialize SSL
+    {
+        SSL_library_init();
+        OpenSSL_add_all_algorithms();
+        SSL_load_error_strings();
+
+        // Create SSL context
+        ctx = SSL_CTX_new(TLS_server_method());
+    }
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(this->_port);
     server_addr.sin_addr.s_addr = INADDR_ANY;
+
+    // SSL handshake
+    {
+        ssl = SSL_new(ctx); /* create SSL stack endpoint */
+        SSL_set_fd(ssl, server_socket); /* attach SSL stack to socket */
+        err = SSL_connect(ssl); /* initiate SSL handshake */
+    }
+    // SSL  certificate
+    {
+        server_cert = SSL_get_peer_certificate(ssl);
+
+        printf("(6) server's certificate was received:\n\n");
+
+//        auto str = X509_NAME_oneline(X509_get_subject_name(server_cert), 0, 0);
+//        printf(" subject: %s\n", str);
+//
+//        str = X509_NAME_oneline(X509_get_issuer_name(server_cert), 0, 0);
+//        printf(" issuer: %s\n\n", str);
+
+        /* certificate verification would happen here */
+
+        X509_free(server_cert);
+    }
 
     bind(server_socket, (struct sockaddr *) &server_addr, sizeof(server_addr));
 
@@ -114,13 +147,14 @@ bool HttpServer::tick() {
     auto endpoint = this->router()->getEndpoint(urlRoute);
 
     // Serve a static file as an asset (only the server is allowed to access it)
+    bool shouldFreeResponseData = false;
     if (std::string(urlRoute).find("/assets") == 0) {
     } else {
         _app->script()->init();
         lua_State *L = _app->script()->getLuaState();
 
         if (boost::filesystem::exists("routes/" + endpoint.endpoint)) {
-            if(_app->script()->loadModule("routes/" + endpoint.endpoint)) {
+            if (_app->script()->loadModule("routes/" + endpoint.endpoint)) {
                 // Create and push the request object that will contain information about requests
                 lua_newtable(L);
                 //Query parameters
@@ -163,13 +197,13 @@ bool HttpServer::tick() {
                 // Now we have to handle middlewares
 
                 // 1. Get all the middlewares from the global ___context table
-                lua_getglobal(L,"___context");
-                lua_getfield(L,-1,"middleware");
-                lua_getfield(L,-1,"stack");
+                lua_getglobal(L, "___context");
+                lua_getfield(L, -1, "middleware");
+                lua_getfield(L, -1, "stack");
                 std::vector<std::string> middlewares;
                 lua_pushnil(L);
                 while (lua_next(L, -2) != 0) {
-                    if(!lua_isstring(L, -1)) {
+                    if (!lua_isstring(L, -1)) {
                         break;
                     }
                     std::string value = lua_tostring(L, -1);
@@ -180,20 +214,20 @@ bool HttpServer::tick() {
                 lua_pop(L, 1);
 
                 // 2. We load and execute each one of them
-                for(const auto& middleware : middlewares){
-                    luaL_dofile(L,middleware.c_str());
-                    lua_getglobal(L,"RouteHandler");
-                    if(lua_isfunction(L,-1)){
+                for (const auto &middleware: middlewares) {
+                    luaL_dofile(L, middleware.c_str());
+                    lua_getglobal(L, "RouteHandler");
+                    if (lua_isfunction(L, -1)) {
                         // We push the middleware parameters
-                        lua_getglobal(L,"___middleware_params");
-                        lua_pcall(L,1,1,0);
-                        auto result =(MiddlewareResult) lua_tointeger(L,-2);
+                        lua_getglobal(L, "___middleware_params");
+                        lua_pcall(L, 1, 1, 0);
+                        auto result = (MiddlewareResult) lua_tointeger(L, -2);
 
-                        if(result == MIDDLEWARE_RESULT_ABORT){
+                        if (result == MIDDLEWARE_RESULT_ABORT) {
                             // We need to abort and return the error code
-                            sendResponse(response_data,contentType,status_code);
+                            sendResponse(response_data, contentType, status_code);
                             return true;
-                        }else if(result == MIDDLEWARE_RESULT_REDIRECT){
+                        } else if (result == MIDDLEWARE_RESULT_REDIRECT) {
                             // TODO
                         }
                     }
@@ -230,8 +264,7 @@ bool HttpServer::tick() {
                                 contentType = "application/json";
                             }
                         }
-                    }
-                    else {
+                    } else {
                         const char *errorMsg = lua_tostring(
                                 L, -1);    // Get the error message from the stack
                         lua_pop(L, 1); // Pop the error message from the stack
@@ -240,25 +273,70 @@ bool HttpServer::tick() {
                 } else {
                     std::cout << "Error: Can't call method " << method << " on route " << endpoint.path << std::endl;
                 }
-            }else{
-                std::cerr << "[lua] : Can't find route "<<urlRoute<<" at /routes/"<<endpoint.endpoint << std::endl;
+            } else {
+                std::cerr << "[lua] : Can't find route " << urlRoute << " at /routes/" << endpoint.endpoint
+                          << std::endl;
             }
-        }
-        else {
-            // FIXME : This should read and return a static file but I have no clue of how I'm supposed to do it without segmentation faults 🥲
+        } else {
+            if (boost::filesystem::exists("static/" + std::string(urlRoute))) {
+                // FIXME : This should read and return a static file but I have no clue of how I'm supposed to do it without segmentation faults 🥲
+                try{
+                    File file;
+                    openFile("static" + std::string(urlRoute),file);
+                    auto r = std::string(urlRoute);
+                    switch (file.type) {
+                        case FILE_TYPE_IMAGE_PNG:
+                            contentType = "image/png";
+                            break;
+                        case FILE_TYPE_IMAGE_JPEG:
+                            contentType = "image/jpeg";
+                            break;
+                        case FILE_TYPE_IMAGE_GIF:
+                            contentType = "image/gif";
+                            break;
+                        case FILE_TYPE_TEXT:
+                            if (r.ends_with(".js"))
+                                contentType = "application/javascript";
+                            else if (r.ends_with(".html") || r.ends_with(".htm"))
+                                contentType = "text/html";
+                            else if (r.ends_with(".json"))
+                                contentType = "application/json";
+                            else if (r.ends_with(".xml"))
+                                contentType = "application/xml";
+                            else if (r.ends_with(".css"))
+                                contentType = "text/css";
+
+                            break;
+                        case FILE_TYPE_UNKNOWN:
+                        case FILE_TYPE_OTHER:
+                            contentType = "application/octet-stream";
+                            break;
+                    }
+                    if(file.type != FILE_TYPE_TEXT){
+                        response_data = (char *) malloc(file.size);
+                        std::memcpy(response_data, file.data, file.size);
+                        shouldFreeResponseData = true;
+                    }else{
+                        response_data = file.data;
+                    }
+
+                    status_code=200;
+                }
+                catch (const std::exception& ex){
+                    std::cerr << "Could not load file: "<<urlRoute <<" : " << ex.what() << std::endl;
+                }
+            }
         }
     }
 
     // Return the response data
 
+    sendResponse(response_data, contentType, status_code);
 
-
-    sendResponse(response_data,contentType,status_code);
-
-//    if (shouldFreeResponseData) {
-//        free(response_data);
-//        shouldFreeResponseData = false;
-//    }
+    if (shouldFreeResponseData) {
+        free(response_data);
+        shouldFreeResponseData = false;
+    }
     return true;
 }
 
@@ -284,9 +362,24 @@ void HttpServer::sendResponse(const std::string &response_data, const std::strin
     char *response = (char *) malloc(response_size);
 
     strcat(response, cresp.c_str());
-
-    send(this->_clientSocket, response, response_size, 0);
+    size_t totalBytesSent = 0;
+    size_t bytesToSend = response_size;
+    while (totalBytesSent < bytesToSend) {
+        auto bytesSent = send(this->_clientSocket, response + totalBytesSent, bytesToSend - totalBytesSent, 0);
+        totalBytesSent += bytesSent;
+    }
     _app->script()->close();
     close(this->_clientSocket);
     free(response);
+}
+
+void HttpServer::exit() {
+    SSL_shutdown(ssl);
+    close(this->_socket);
+    SSL_free(ssl);
+    SSL_CTX_free(ctx);
+}
+
+HttpServer::~HttpServer() {
+    this->exit();
 }

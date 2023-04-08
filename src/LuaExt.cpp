@@ -333,7 +333,7 @@ char *nativeFetch(std::string url, std::string method, std::string data) {
     }
 
     string request = method + " " + path + " HTTP/1.1\r\nHost: " + host +
-                     "\r\nConnection: close\r\n";
+                     "\r\nConnection: exit\r\n";
     if (method == "POST") {
         request += "Content-Type: "
                    "application/x-www-form-urlencoded\r\nContent-Length: " +

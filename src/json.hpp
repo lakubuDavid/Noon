@@ -6496,7 +6496,7 @@ class basic_json
 
         /*!
         This function implements a scanner for JSON. It is specified using
-        regular expressions that try to follow RFC 7159 as close as possible.
+        regular expressions that try to follow RFC 7159 as exit as possible.
         These regular expressions are then translated into a deterministic
         finite automaton (DFA) by the tool re2c <http://re2c.org>. As a result,
         the translated code for this function consists of a large block of code

@@ -3,9 +3,9 @@
 
 ## Synopsis
 
-*Due to a mix of curiosity and boredom, I asked mywself "Can I make a website in C?" but as I could only setup a C++ project I decided to go for it and to accelerate the development time I decided to add Lua to accelerate it.*
+*Due to a mix of curiosity and boredom, I asked my self "Can I make a website in C?" but as I could only set up a C++ project I decided to go for it and to accelerate the development time I decided to add Lua.*
 
-*So that's what I did,sacrificing part of my time,sleep and mental health to achive this weird objective using as language that only an elite that has sold itself to the devil can pretend to master 20% of it.*
+*So that's what I did,sacrificing part of my time,sleep and mental health to achieve this weird objective using as language that only an elite that has sold itself to the devil can pretend to master 20% of it.*
 
 ## Description
 
@@ -43,7 +43,7 @@ The project is composed like this :
     noon(.exe)      -- The server executable
     noon.config.lua -- The configuration file
     routes/         -- Contains the routes
-    -- NOT IMPLEMENTED
+    middlewares     -- Contains the middlewares
     static/         -- Contains all the static files
 ```
 
@@ -59,7 +59,7 @@ appName= "MyApp"
 version= "1.0"
 routes= {
     ["/"] = "index.lua"                     -- / points to /routes/index.lua 
-    ["/api/hello.lua"] = "api/hello.lua"    --/api/hello points to /routes/api/hello.lua 
+    ["/api/hello"] = "api/hello.lua"    --/api/hello points to /routes/api/hello.lua 
     ...
 }
 ```
@@ -72,8 +72,8 @@ Routes are defined in the routes folder as lua  scripts that contains functions 
 -- index.lua
 
 function GET()
-    local context = {}
-    return renderTemplate("/html/index.html",context),200
+    local params = {}
+    return renderTemplate("/html/index.html",params),200
 end
 
 function POST()
@@ -100,16 +100,14 @@ end
 
 ## Limitations
 
-Since static file serving is not yet implemented you can't reference assets from your project that includes `css,js` files and **pictures**
+Since static file serving is not ~~implemented~~ complete, you can't reference non-text assets like images,videos or audios.
 
 >### Workaround
 >
->For `css` and `js` files you can have them in your html file.
->
->You can also reference your assets from a cdn.
+>You can use pictures from a cdn
 ## Development (pls help me 😫)
 
-I'm currently trying to implement data fetching and static file serving but I can't figure out how to implement it. So to whoever has enough knowledge of C++, please feel free to help.
+I'm currently trying to implement data fetching and static file serving, but I can't figure out how to implement it. So to whoever has enough knowledge of C++, please feel free to help.
 
 *Yours faithfully,*<br>
 *A guy that has decided to lose his sanity to a language he already gave up on a few years ago.*
@@ -120,6 +118,8 @@ Here is a list of third party requirements that you may need to build it:
 
 - Lua 5.4
 - Boost 1.81
+- Openssl 3.1.0
+- nlohmann's json library
 
 ## Contact me
 

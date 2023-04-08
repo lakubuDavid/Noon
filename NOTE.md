@@ -56,7 +56,7 @@ So we need a way of keeping a middleware list in memory before executing the rou
 ##### Idea 1
 
 We define a global variable that will be used to store the middleware list <br>
-Then before we execute the routes we access that list of middlewares,execute each one of them and 
+Then before we execute the routes we access that list of middlewares,execute each one of them, and 
 then we execute route.
 
 **POSSIBLE ISSUE** : The middleware `handle` functions will override each other since we need the same context.
@@ -71,18 +71,18 @@ While implementing middlewares, I have decided to also add hot reload of the
 `noon.config.lua` file ,since every script are loaded on execution ,it means that they
 can be modified while executing but for the `noon.config.lua` file it's more complicated.
 Since routes and app configs are in that file,we need to update the router and apps configs
-as soon as the script is modified because thats the only file that is called only one, on startup.
+as soon as the script is modified because that's the only file that is called only one, on startup.
 
-## Problem #1 : Multi threading
+### Problem #1 : Multi threading
 
 So, the initial watcher was supposed to be in a separate thread but whenever I try to join it,
 it blocks the entire app
 
-## Middleware function rename
+### Middleware function rename
 The middleware function has been renamed to `RouteHandler`to keep it recognizable since 
 it's a global function
 
-## Middlewares Parameters
+### Middlewares Parameters
 
 Some middlewares might need parameters to avoid having to rewrite similar code.<br>
 For example a middleware that only allows user with a certain role
@@ -105,7 +105,38 @@ function RouteHandler(params)
 end 
 ```
 
-## Data fetching
+### Data fetching
 
 Since I'm finally done with middlewares I would like to work on two of the most useful
 features : **Data fetching** and **static file serving**.
+
+
+## [Saturday 8,April 2023]
+
+### Progression on static file serving
+Finally , I have implemented static file serving...kinda...let me explain<br>
+Static file serving is more complicated than it looks like for non-text based files, for now I am able to serve
+text files which means javascript,css,xml and json.
+
+#### How it works
+
+Just put your file in the static folder and _voilà_ 
+
+```lua
+<app>
+    /routes
+        ...
+    /middlewares
+        ...
+    /static
+        style.css
+        app.js
+```
+
+### Data fetching
+
+As I was trying to implement data fetching I realised that one of the reasons why it wasn't working
+is because the server doesn't support the `https` protocol.So naturally, the next step will be to implement it
+I've decided that I will use openssl as it's opensource and I can find a lot of documentation and basic examples on ~~ChatGPT~~ the internet
+
+This should be my next objective together with binary/image file serving.

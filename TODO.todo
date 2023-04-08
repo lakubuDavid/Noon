@@ -6,3 +6,4 @@
 - [x] Pass query parameters to routes
 - [x] Pass body parameters to post requests
 - [ ] Add fetch
+- [ ] Add ssl/https support

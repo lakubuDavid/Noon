@@ -58,6 +58,7 @@ int App::run() {
         while(running){
             running = httpServer->tick();
         }
+        httpServer->exit();
     }
     else{
         std::cout << "Can't load configuration (noon.config.lua not found)" << std::endl;

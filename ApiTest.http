@@ -1,3 +1,7 @@
+GET http://localhost:8080/?id=99
+Accept: */*
+
+###
 GET http://localhost:8080/api/fetch?id=99
 Accept: application/json
 

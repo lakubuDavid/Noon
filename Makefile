@@ -7,7 +7,7 @@ CXX := clang++
 CXX_VERSION := c++20
 
 # define the FLAGS
-FLAGS := -Wall -llua -lboost_filesystem -lboost_filesystem -lboost_chrono -lboost_thread  -g
+FLAGS := -Wall -llua -lboost_filesystem -lboost_filesystem -lboost_chrono -lboost_thread -lssl -lcrypto  -g
 
 DEFINES :=
 #-DBOOST_NO_EXCEPTIONS

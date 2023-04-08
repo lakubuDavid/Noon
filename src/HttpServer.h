@@ -12,6 +12,12 @@
 #include <string>
 #include <nlohmann/json.hpp>
 
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 // typedef struct HttpServer{
 //     int port;
 //     int socket;
@@ -23,6 +29,11 @@ class HttpServer{
     int _port;
     int _socket;
     int _clientSocket;
+
+    SSL *ssl;
+    SSL_CTX *ctx;
+    SSL_METHOD *client_method;
+    X509 *server_cert;
 
     App *_app;
     Router *_router;
@@ -39,6 +50,7 @@ public:
     HttpServer(int port,App* app); 
     ~HttpServer();
     void init();
+    void exit();
 
     Router* router();
     // Called in the main loop
