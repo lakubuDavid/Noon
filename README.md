@@ -100,7 +100,7 @@ end
 ```
 ### Rendering html
 I use a basic template engine that can only execute basic expressions or replace a variable.<br>
-To use it just pass the arguments as a table to the `renderTemplate` function and in the html surround the expression with `{ }`.
+To use it just pass the arguments as a table to the `renderTemplate` function and in the html surround the expression with `{{ }}`.
 
 ```lua
 -- index.lua
