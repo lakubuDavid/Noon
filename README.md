@@ -106,6 +106,7 @@ Since static file serving is not ~~implemented~~ complete, you can't reference n
 >### Workaround
 >
 >You can use pictures from a cdn
+
 ## Development (pls help me 😫)
 
 I'm currently trying to implement data fetching and static file serving, but I can't figure out how to implement it. So to whoever has enough knowledge of C++, please feel free to help.
