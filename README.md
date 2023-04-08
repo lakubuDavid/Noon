@@ -22,7 +22,7 @@ Here are the main steps of the projects that I will be implementing to consider 
 - [ ] Handling requests cookies ***(not implemented)*** ❌
 - [ ] Handling requests sessions ***(not implemented)*** ❌
 - [x] Add middlewares ***(done)*** ✅
-- [ ] Have  a full routing system ***(partially | in progress)*** 🟨️👷🏾
+- Have  a full routing system ***(partially | in progress)*** 🟨️👷🏾
   - [x] Static routes   ***(done)*** ✅
   - [x] Parameters ***(not implemented)*** ❌
   - [ ] Dynamic routes ***(not implemented)*** ❌
