@@ -26,9 +26,12 @@
 // HttpServer* initHttpServer(HttpServer* server,int port);
 class App;
 class HttpServer{
+
     int _port;
     int _socket;
     int _clientSocket;
+
+//    Protocol protocol;
 
     SSL *ssl;
     SSL_CTX *ctx;

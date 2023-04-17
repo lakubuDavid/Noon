@@ -7,3 +7,4 @@
 - [x] Pass body parameters to post requests
 - [ ] Add fetch
 - [ ] Add ssl/https support
+- [ ] A better doc

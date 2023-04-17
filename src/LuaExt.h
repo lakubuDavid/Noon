@@ -2,19 +2,34 @@
 #define LUA_EXT_H
 
 #include <string>
+#include <cstring>
 #include "lua.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <netdb.h>
 #include <map>
+
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
 
 #include <cmath>
 
 #include "json.h"
 #include <nlohmann/json.hpp>
+
+#include "Utils.h"
+
+#include "SSLConnection.h"
+#include "SocketConnection.h"
 
 struct FetchResult {
   char *data;

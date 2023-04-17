@@ -18,7 +18,7 @@ App::~App()
 bool App::loadConfig() {
     if(scriptEngine->loadModule("./noon.config.lua")) {
         std::cout << "Loading configuration" << std::endl;
-        std::cout << "\n---" << std::endl;
+        std::cout << "---" << std::endl;
         std::cout << "App Name : " << scriptEngine->getString("appName") << std::endl;
         std::cout << "version : " << scriptEngine->getString("version") << std::endl;
         std::cout << "---" << std::endl;
@@ -30,8 +30,6 @@ bool App::loadConfig() {
             auto path = route.second;
 
             this->httpServer->router()->addRoute(key, path);
-            // std::cout << "\t" << key << " ("<< name <<"): /" << path << std::endl;
-            // this->httpServer->router()->addRoute("home", "api/home.lua");
         }
         return true;
     }
@@ -46,7 +44,6 @@ int App::run() {
         scriptEngine->close();
 
         auto config = script()->watchFile("./noon.config.lua",App::onConfigChanged);
-
 
         // Initialize the http server
         httpServer->init();

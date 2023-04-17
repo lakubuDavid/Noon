@@ -79,6 +79,7 @@ std::string nativeRenderTemplate(const std::string &path, map<string, string> pa
         }
     }
 
+    // Cleanup everything
     for (auto [key, value]: params) {
         lua_pushnil(L);
         lua_setglobal(L, key.c_str());
@@ -198,17 +199,17 @@ int json_to_lua(lua_State *L) {
     // Parse the JSON string
     auto json = nlohmann::json::parse(json_str);
     lua_newtable(L);
-    json_object_to_lua(L,json);
+    json_object_to_lua(L, json);
     return 1;
 }
 
-void json_array_to_lua(lua_State *L, nlohmann::json& json_array) {}
+void json_array_to_lua(lua_State *L, nlohmann::json &json_array) {}
 
-void json_object_to_lua(lua_State *L, nlohmann::json& json) {
-    for(auto el:json.items()) {
+void json_object_to_lua(lua_State *L, nlohmann::json &json) {
+    for (auto el: json.items()) {
         lua_pushstring(L, el.key().c_str());
         int i;
-        switch(el.value().type()){
+        switch (el.value().type()) {
             case nlohmann::json::value_t::boolean:
                 lua_pushboolean(L, el.value());
                 break;
@@ -227,153 +228,101 @@ void json_object_to_lua(lua_State *L, nlohmann::json& json) {
             case nlohmann::json::value_t::array:
                 lua_newtable(L);
                 i = 1;
-                for(auto sub_el:el.value().items()){
-                    json_object_to_lua(L,sub_el.value());
+                for (auto sub_el: el.value().items()) {
+                    json_object_to_lua(L, sub_el.value());
                     lua_rawseti(L, -2, i);
                     i++;
                 }
                 break;
             case nlohmann::json::value_t::object:
                 lua_newtable(L);
-                for(auto sub_el:el.value().items()){
-                    lua_pushstring(L,sub_el.key().c_str());
-                    json_object_to_lua(L,sub_el.value());
-                    lua_settable(L,-3);
+                for (auto sub_el: el.value().items()) {
+                    lua_pushstring(L, sub_el.key().c_str());
+                    json_object_to_lua(L, sub_el.value());
+                    lua_settable(L, -3);
                 }
                 break;
             case nlohmann::json::value_t::null:
                 lua_pushnil(L);
                 break;
         }
-        lua_settable(L,-3);
+        lua_settable(L, -3);
     }
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 char *nativeFetch(std::string url, std::string method, std::string data) {
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock == -1) {
-        cerr << "[lua] : Could not create socket" << endl;
-        return "";
+    int err;
+    ConnectionInfo cinfo;
+    cinfo = Connection::getInfo(url);
+    string path;
+    // Parse the request's path
+    {
+        // remove the protocol
+        auto full_url = url;
+        int pos = full_url.find("://");
+        auto no_protocol = full_url.substr(pos+3);
+        pos = no_protocol.find("/");
+        path = no_protocol.substr( pos);
     }
+    printf("[fetch] : Fetching %s from %s | %s on port %d\n", path.c_str(), cinfo.host.c_str(),
+           method.c_str(), cinfo.porti);
 
-    size_t pos = url.find("://");
-    string protocol = url.substr(0, pos);
-    url.erase(0, pos + 3);
+    Connection *connection;
 
-    pos = url.find("/");
-    string host = url.substr(0, pos);
-    auto colon_pos = url.find(":");
-    string port;
-    if(colon_pos != string::npos)
-        port = url.substr(colon_pos, pos - colon_pos);
-    else {
-        if(protocol == "http")
-            port = "80";
-        else if(protocol == "https")
-            port = "443";
-    }
-    int porti = 0;
-    int s = port.size();
-    for (int i = 0; i < s; i++) {
-        int n = 0;
-        switch (port[i]) {
-            case '0':
-                n = 0;
-                break;
-            case '1':
-                n = 1;
-                break;
-            case '2':
-                n = 2;
-                break;
-            case '3':
-                n = 3;
-                break;
-            case '4':
-                n = 4;
-                break;
-            case '5':
-                n = 5;
-                break;
-            case '6':
-                n = 6;
-                break;
-            case '7':
-                n = 7;
-                break;
-            case '8':
-                n = 8;
-                break;
-            case '9':
-                n = 9;
-                break;
-            default:
-                break;
-        }
+    if (cinfo.protocol == PROTOCOL_HTTP)
+        connection = new SocketConnection(url);
+    else
+        connection = new SSLConnection(url);
+    if (connection->open() < 0) {
 
-        porti += n * pow(10, s - i - 1);
-    }
-    string path = url.substr(pos);
-    printf("[fetch] : Fetching %s from %s | %s on port %d\n", path.c_str(), host.c_str(),
-           method.c_str(), porti);
-
-    struct sockaddr_in server;
-//    server.sin_addr.s_addr = inet_addr(host.c_str());
-    server.sin_family = AF_INET;
-    server.sin_port = htons(porti);
-
-    if (inet_pton(AF_INET, host.c_str(), &server.sin_addr) <= 0) {
-        std::cerr << "Invalid address/ Address not supported" << std::endl;
+        std::cerr << "Failed to open" << std::endl;
+        ERR_print_errors_fp(stderr);
         return NULL;
     }
 
-    if (connect(sock, (struct sockaddr *) &server, sizeof(server)) < 0) {
-        cerr << "[fetch] : Connection failed" << endl;
-        return NULL;
-    }
-
-    string request = method + " " + path + " HTTP/1.1\r\nHost: " + host +
-                     "\r\nConnection: exit\r\n";
-    if (method == "POST") {
+    string request = method + " " + path + " HTTP/1.1\r\nHost: " + cinfo.host +
+                     "\r\n";
+    request += "Accept : */* \r\n";
+    if (method == "POST" || method == "PUT") {
         request += "Content-Type: "
                    "application/x-www-form-urlencoded\r\nContent-Length: " +
                    to_string(data.length()) + "\r\n";
         request += "\r\n" + data;
-    } else if (method == "PUT") {
-        request += "Content-Type: "
-                   "application/x-www-form-urlencoded\r\nContent-Length: " +
-                   to_string(data.length()) + "\r\n";
-        request += "\r\n" + data;
-    } else if (method == "DELETE") {
-        request += "\r\n";
     } else {
         request += "\r\n";
     }
+
     try {
-        if (send(sock, request.c_str(), request.length(), 0) < 0) {
+        if (connection->write((char *) request.c_str(), request.length()) < 0) {
             cerr << "[fetch] : Send failed" << endl;
+            ERR_print_errors_fp(stderr);
             return NULL;
         }
 
         char buffer[1024] = {0};
         string response = "";
-        while (read(sock, buffer, sizeof(buffer)) > 0) {
+        while (connection->read(buffer, sizeof(buffer)) > 0) {
             response += buffer;
             memset(buffer, 0, sizeof(buffer));
         }
 
-        close(sock);
+        connection->close();
 
-        char *result = new char[response.length() + 1];
-        strcpy(result, response.c_str());
+        char *reslt = new char[response.length() + 1];
+        strcpy(reslt, response.c_str());
 
-        return result;
+        return reslt;
     } catch (const std::exception ex) {
         char *error;
         snprintf(error, sizeof(error), "[fetch] : Error: %s", ex.what());
         return error;
     }
 }
+
+#pragma clang diagnostic pop
 
 int fetch(lua_State *L) {
     if (lua_isstring(L, -3) && lua_isstring(L, -2)) {

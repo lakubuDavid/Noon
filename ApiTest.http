@@ -1,3 +1,7 @@
+GET https://localhost:4000/api/users?id=99
+Accept: application/json
+
+###
 GET http://localhost:8080/?id=99
 Accept: */*
 

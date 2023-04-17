@@ -68,12 +68,28 @@ void HttpServer::init() {
         SSL_set_fd(ssl, server_socket); /* attach SSL stack to socket */
         err = SSL_connect(ssl); /* initiate SSL handshake */
     }
+    SSL_CTX_set_cipher_list(ctx, "ALL:eNULL");
+    printf("(5) SSL connected with cipher: %s\n\n", SSL_get_cipher(ssl));
     // SSL  certificate
     {
         server_cert = SSL_get_peer_certificate(ssl);
 
         printf("(6) server's certificate was received:\n\n");
-
+        if (server_cert != nullptr)
+        {
+            printf("Server certificates:\n");
+            char *line = X509_NAME_oneline(X509_get_subject_name(server_cert), 0, 0);
+            printf("Subject: %s\n", line);
+            delete line;
+            line = X509_NAME_oneline(X509_get_issuer_name(server_cert), 0, 0);
+            printf("Issuer: %s\n", line);
+            delete line;
+            X509_free(server_cert);
+        }
+        else
+        {
+            printf("Info: No client certificates configured.\n");
+        }
 //        auto str = X509_NAME_oneline(X509_get_subject_name(server_cert), 0, 0);
 //        printf(" subject: %s\n", str);
 //
@@ -140,7 +156,7 @@ bool HttpServer::tick() {
 
     char *response_data = "<html><body>404</body></html>";
     int status_code = 404;
-    auto contentType = "text/plain; charset=utf-8";
+    auto contentType = "text/html; charset=utf-8";
 
     if (strlen(urlRoute) == 0)
         urlRoute = "/";
@@ -148,8 +164,7 @@ bool HttpServer::tick() {
 
     // Serve a static file as an asset (only the server is allowed to access it)
     bool shouldFreeResponseData = false;
-    if (std::string(urlRoute).find("/assets") == 0) {
-    } else {
+    {
         _app->script()->init();
         lua_State *L = _app->script()->getLuaState();
 
@@ -362,11 +377,13 @@ void HttpServer::sendResponse(const std::string &response_data, const std::strin
     char *response = (char *) malloc(response_size);
 
     strcat(response, cresp.c_str());
+
     size_t totalBytesSent = 0;
     size_t bytesToSend = response_size;
     while (totalBytesSent < bytesToSend) {
         auto bytesSent = send(this->_clientSocket, response + totalBytesSent, bytesToSend - totalBytesSent, 0);
         totalBytesSent += bytesSent;
+//        int err = SSL_write(ssl,response,response_size);
     }
     _app->script()->close();
     close(this->_clientSocket);
