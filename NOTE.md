@@ -140,3 +140,12 @@ is because the server doesn't support the `https` protocol.So naturally, the nex
 I've decided that I will use openssl as it's opensource and I can find a lot of documentation and basic examples on ~~ChatGPT~~ the internet
 
 This should be my next objective together with binary/image file serving.
+
+## [Monday 17,April 2023]
+
+### Connections, SocketConnections and SSLConnections
+
+So I have decided to implement the connection class to encapsulate the sockets and SSL sockets to make it easier.<br>
+Having an abstraction layer allows me to handle HTTP and HTTPS connections the same way without having a bigger code base,
+for now they will be used only for data fetching but those classes are designed to be used also on the server itself
+so that instead of having a HttpServer and HttpsServer class we can just have a Server class with either a SSL Connection or a basic Socket Connection one

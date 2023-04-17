@@ -162,7 +162,6 @@ bool HttpServer::tick() {
         urlRoute = "/";
     auto endpoint = this->router()->getEndpoint(urlRoute);
 
-    // Serve a static file as an asset (only the server is allowed to access it)
     bool shouldFreeResponseData = false;
     {
         _app->script()->init();
@@ -170,12 +169,24 @@ bool HttpServer::tick() {
 
         if (boost::filesystem::exists("routes/" + endpoint.endpoint)) {
             if (_app->script()->loadModule("routes/" + endpoint.endpoint)) {
-                // Create and push the request object that will contain information about requests
-                lua_newtable(L);
+
+                /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+                 * Create and push the request object that will contain information about requests
+                 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+                 * The request object will look like this :
+                 * {
+                 *     body : table | nil // for POST and PUT requests
+                 *     query : table
+                 *     path : string
+                 *     url : string
+                 * }
+                 * */
+                lua_newtable(L); // Request table
                 //Query parameters
                 {
+                    //We pass each query parameter to lua
                     lua_pushstring(L, "query");
-                    lua_newtable(L);
+                    lua_newtable(L); // Query table
                     for (auto const &pair: endpoint.parameters) {
                         lua_pushstring(L, pair.first.c_str());
                         lua_pushstring(L, pair.second.c_str());
@@ -191,7 +202,7 @@ bool HttpServer::tick() {
                         auto post_data = req.substr(pos);
                         auto json_data = nlohmann::json::parse(post_data);
                         lua_pushstring(L, "body");
-                        lua_newtable(L);
+                        lua_newtable(L); // Body table
                         json_object_to_lua(L, json_data);
                         lua_settable(L, -3);
                     }
@@ -207,10 +218,21 @@ bool HttpServer::tick() {
                     lua_settable(L, -3);
                 }
 
-                lua_setglobal(L, "request");
+                lua_setglobal(L, "request"); // We have a global request object
 
-                // Now we have to handle middlewares
 
+                /*
+                 * Now we have to handle middlewares
+                 *
+                 * We have a global ___context object that holds everything about the execution context
+                 * We will store each middleware in the global ___context
+                 * The context will look like this :
+                 * ___context = {
+                 *    middleware = {
+                 *        stack // Will contain middlewares as a stack
+                 *    }
+                 * }
+                 */
                 // 1. Get all the middlewares from the global ___context table
                 lua_getglobal(L, "___context");
                 lua_getfield(L, -1, "middleware");
@@ -233,7 +255,7 @@ bool HttpServer::tick() {
                     luaL_dofile(L, middleware.c_str());
                     lua_getglobal(L, "RouteHandler");
                     if (lua_isfunction(L, -1)) {
-                        // We push the middleware parameters
+                        // We pull the current middleware parameters from ___middleware_params and use the middleware
                         lua_getglobal(L, "___middleware_params");
                         lua_pcall(L, 1, 1, 0);
                         auto result = (MiddlewareResult) lua_tointeger(L, -2);
@@ -247,6 +269,8 @@ bool HttpServer::tick() {
                         }
                     }
                 }
+
+                // Since all middlewares have been called we can now call the actual route handler
 
                 lua_getglobal(L, method);
                 if (lua_isfunction(L, -1)) {
@@ -294,7 +318,7 @@ bool HttpServer::tick() {
             }
         } else {
             if (boost::filesystem::exists("static/" + std::string(urlRoute))) {
-                // FIXME : This should read and return a static file but I have no clue of how I'm supposed to do it without segmentation faults 🥲
+                // FIXME : This only works with text based files ,I have no clue how I'm supposed to do it without segmentation faults 🥲
                 try{
                     File file;
                     openFile("static" + std::string(urlRoute),file);
