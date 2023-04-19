@@ -10,7 +10,13 @@
 ## Description
 
 Noon is a web server that uses Lua as it's main language for handling requests and sending responses.
-It doesn't use any tenplating engine so everything is done in good 'ole HTML.
+It doesn't use any templating engine so everything is done in good 'ole HTML.
+
+## Project Structure
+
+So,the project structure might be pretty unordered but here are the main things you need to know
+- *app* : Contains a sample project usable by the server, to use it you need to set it as the working directory directory
+- *src* : Contains the source code
 
 ## Roadmap
 
