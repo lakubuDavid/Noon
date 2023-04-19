@@ -5,6 +5,6 @@
 - [ ] Add static files serving
 - [x] Pass query parameters to routes
 - [x] Pass body parameters to post requests
-- [ ] Add fetch
-- [ ] Add ssl/https support
+- [x] Add fetch
+- [x] Add ssl/https support
 - [ ] A better doc
