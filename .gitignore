@@ -34,3 +34,9 @@
 # Directories
 build/
 obj/
+
+# Certificates files
+*.crt
+*.csr
+*.key
+*.srl
