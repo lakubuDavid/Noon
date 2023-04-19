@@ -8,6 +8,7 @@
 #include <string>
 #include <cmath>
 
+
 //template <typename T>
 //class Result{
 //    std::string _msg = "No error";
@@ -18,7 +19,7 @@
 //    bool error();
 //    T data();
 //};
-
+//class Connection;
 template <typename T>
 typedef struct Result{
     std::string msg = "No error";
@@ -59,5 +60,7 @@ Result<T>::Result(T value) {
 
 
 int parse_int(const std::string& str);
+
+//Connection* openConnection(const std::string& url);
 
 #endif //UTILS_H

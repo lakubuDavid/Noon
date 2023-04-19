@@ -50,6 +50,15 @@ int parse_int(const std::string &str) {
     return value;
 }
 
+//Connection *openConnection(const std::string &url) {
+//    auto info = Connection::getInfo(url);
+//    if(info.protocol == PROTOCOL_HTTP) {
+//        return new SocketConnection(url);
+//    }else if(info.protocol == PROTOCOL_HTTPS){
+//        return new SSLConnection(url);
+//    }
+//}
+
 //template<typename T>
 //std::string Result<T>::msg() {
 //    return _msg;

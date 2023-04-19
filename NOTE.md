@@ -149,3 +149,9 @@ So I have decided to implement the connection class to encapsulate the sockets a
 Having an abstraction layer allows me to handle HTTP and HTTPS connections the same way without having a bigger code base,
 for now they will be used only for data fetching but those classes are designed to be used also on the server itself
 so that instead of having a HttpServer and HttpsServer class we can just have a Server class with either a SSL Connection or a basic Socket Connection one
+
+## [Wednesday 19,April 2023]
+
+### SSL fixed
+
+Somehow it works now...

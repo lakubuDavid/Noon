@@ -19,7 +19,8 @@
 
 #include "Connection.h"
 
-class SSLConnection : public Connection{
+class SSLConnection : public Connection {
+    int _clientSocket;
     int _socket = -1;
     SSL *ssl;
     SSL_CTX *ctx;

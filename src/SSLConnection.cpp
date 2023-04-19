@@ -67,29 +67,35 @@ int SSLConnection::open() {
                 std::cerr << "Failed to open : Can't find "<<_info.host <<":"<<_info.port << std::endl;
                 return -1;
             }
+
+            //We have the server socket
         }
     }
     if(_isServer){
-        ctx = SSL_CTX_new(TLS_server_method());
+        ctx = SSL_CTX_new(SSLv23_server_method());
     }else{
-        ctx = SSL_CTX_new(TLS_client_method());
+        ctx = SSL_CTX_new(SSLv23_client_method());
     }
     if(ctx == NULL) {
         ERR_print_errors_fp(stderr);
         return -1;
     }
-    if (SSL_CTX_use_certificate_file(ctx, "noon_cert.pem", SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_certificate_file(ctx, "server.crt", SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
         return -1;
     }
 
-    if (SSL_CTX_use_PrivateKey_file(ctx, "noon_cert.pem", SSL_FILETYPE_PEM) <= 0 ) {
+    if (SSL_CTX_use_PrivateKey_file(ctx, "server.key", SSL_FILETYPE_PEM) <= 0 ) {
         ERR_print_errors_fp(stderr);
        return -1;
     }
     ssl = SSL_new(ctx);
-    SSL_set_fd(ssl, _socket);
+    if(SSL_set_fd(ssl, _socket) == 0){
+        fprintf(stderr, "SSL_set_fd() failed\n");
+        return 1;
+    }
 
+    SSL_set_tlsext_host_name(ssl, _info.host.c_str());
     int connect_result =  SSL_connect(ssl);
     {
         X509 *cert;

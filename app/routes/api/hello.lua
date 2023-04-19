@@ -5,7 +5,3 @@ function GET()
     return jsonify(response),200
 end
 
-function POST()
-    return "{\"hello\":\"world\"}",200
-end
-

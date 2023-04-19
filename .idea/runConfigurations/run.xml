@@ -1,5 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="run" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$PROJECT_DIR$/app" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Noon-WebServer" TARGET_NAME="all" CONFIG_NAME="all" version="1" RUN_PATH="$PROJECT_DIR$/build/noon">
-    <method v="2" />
+  <configuration default="false" name="run" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$PROJECT_DIR$/app" PASS_PARENT_ENVS_2="true" PROJECT_NAME="CWebServer" TARGET_NAME="all" CONFIG_NAME="all" version="1" RUN_PATH="$PROJECT_DIR$/build/noon">
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="all" run_configuration_type="MAKEFILE_TARGET_RUN_CONFIGURATION" />
+    </method>
   </configuration>
 </component>

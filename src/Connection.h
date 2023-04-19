@@ -38,7 +38,6 @@ public:
     virtual int listen()=0;
 
     virtual int accept() = 0;
-
     static ConnectionInfo getInfo(const std::string &host, bool secureByDefault = true);
 };
 
