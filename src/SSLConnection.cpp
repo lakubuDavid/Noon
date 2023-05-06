@@ -3,6 +3,7 @@
 //
 
 #include "SSLConnection.h"
+#include "RuntimeConfig.h"
 
 SSLConnection::SSLConnection(const std::string &host, bool is_server) :
 Connection(host, is_server) {
@@ -80,12 +81,12 @@ int SSLConnection::open() {
         ERR_print_errors_fp(stderr);
         return -1;
     }
-    if (SSL_CTX_use_certificate_file(ctx, "server.crt", SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_certificate_file(ctx, RuntimeConfig::instance()->get("SSL_CERTIFICATE","server.crt").c_str(), SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
         return -1;
     }
 
-    if (SSL_CTX_use_PrivateKey_file(ctx, "server.key", SSL_FILETYPE_PEM) <= 0 ) {
+    if (SSL_CTX_use_PrivateKey_file(ctx, RuntimeConfig::instance()->get("SSL_CERTIFICATE_KEY","server.key").c_str(), SSL_FILETYPE_PEM) <= 0 ) {
         ERR_print_errors_fp(stderr);
        return -1;
     }

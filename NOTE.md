@@ -148,10 +148,57 @@ This should be my next objective together with binary/image file serving.
 So I have decided to implement the connection class to encapsulate the sockets and SSL sockets to make it easier.<br>
 Having an abstraction layer allows me to handle HTTP and HTTPS connections the same way without having a bigger code base,
 for now they will be used only for data fetching but those classes are designed to be used also on the server itself
-so that instead of having a HttpServer and HttpsServer class we can just have a Server class with either a SSL Connection or a basic Socket Connection one
+so that instead of having a Server and HttpsServer class we can just have a Server class with either a SSL Connection or a basic Socket Connection one
 
 ## [Wednesday 19,April 2023]
 
 ### SSL fixed
 
 Somehow it works now...
+
+## [Saturday 22,April 2023]
+
+### .env file and cli arguments
+
+To make things more organized, I have decided to add command line arguments so that the server executable can be in another directory than the project
+I have also added environment variables to set some other parameters from it.
+That explains the major use of the `getPath` function since it adds the root at the beginning of the path
+
+## [Wednesday 3,May 2023]
+
+### Added catch all routes
+
+So, after a small pause, I have implemented Catch all routes and here is how they work : <br>
+
+Catch all routes are defined with a `...` at the end. I have also added a `subPath` fields to the `request` global table.<br>
+By the way I haven't yet described the request table ; It contains informations related to the current request
+
+```json
+{
+  "request": {
+    "method": "...",// The http method
+    "query": {
+      // Conatins all the query parameters attached to the request
+    },
+    "route": {
+      "subPath":"", // For catch all routes : The path following the `...` in the endpoint declaration
+                    //eg. In "/all/..." if we request "/all/dog/names", the subPath will be "/dog/names"
+      "params": {
+        // For dynamic route : parameters attached to the url
+        // eg. A route defined as "/users/:userId" will have a parameter named "userId" with the value passed to the url
+      }
+    },
+    "body": {
+      // POST/PUT request body as Json
+    }
+  }
+}
+```
+
+### Requests headers
+
+So now I need to have a way to interact with headers :
+1. In the `fetch` method : To be able to specify the headers as a KV table
+2. In the `request` table : To be able to get the headers from the request as a KV table
+
+Thats my next mission for the following hours/days/weeks 😅

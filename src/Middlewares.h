@@ -11,6 +11,7 @@
 #include <boost/any.hpp>
 #include <iostream>
 #include <map>
+#include "ILuaExtension.h"
 
 enum MiddlewareResult {
     MIDDLEWARE_RESULT_NEXT = 0,
@@ -25,5 +26,9 @@ int middlewareRedirect(lua_State* L);
 
 int useMiddleware(lua_State* L);
 
+class MiddlewareExtension : public ILuaExtension{
+public:
+    virtual void registerExtension(lua_State* L);
+};
 
 #endif //MIDDLEWARES_H

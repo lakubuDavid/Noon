@@ -2,7 +2,14 @@
 // Created by David Lakubu on 09/04/2023.
 //
 
+#include "Log.h"
+#include "App.h"
+#include <csignal>
+#include <string>
+#include <signal.h>
+#include <stdio.h>
 #include "Utils.h"
+#include "RuntimeConfig.h"
 
 int parse_int(const std::string &str) {
     int s = str.size();
@@ -50,6 +57,12 @@ int parse_int(const std::string &str) {
     return value;
 }
 
+std::string getPath(const std::string& path){
+    auto root = RuntimeConfig::instance()->get("NOON_APP_DIR",".");
+    if(root[root.size()-1] != '/')
+        root = root + "/";
+    return root+path;
+}
 //Connection *openConnection(const std::string &url) {
 //    auto info = Connection::getInfo(url);
 //    if(info.protocol == PROTOCOL_HTTP) {
@@ -73,3 +86,11 @@ int parse_int(const std::string &str) {
 //    return _error;
 //}
 
+void printHelp(){
+    std::cout << "Usage: noon --help or noon <property> <value> " << std::endl;
+    std::cout << " Properties:" << std::endl;
+    std::cout << "\t --appDir DIR    : Set the app directory (the one containing the `noon.config.lua` file) " << std::endl;
+    std::cout << "\t --port PORT     : Set the port (default: 8080) " << std::endl;
+    std::cout << "\t --cert CERT_FILE CERT_KEY_FILE: Set the certificate and the certificate key (default : Will use the default server certificate)" << std::endl;
+    std::cout << "\t\t For security reason, you should specify your own certificate" << std::endl;
+}

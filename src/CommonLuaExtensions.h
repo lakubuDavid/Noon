@@ -23,10 +23,10 @@
 
 #include <cmath>
 
-#include "json.h"
 #include <nlohmann/json.hpp>
 
 #include "Utils.h"
+#include "Log.h"
 
 #include "SSLConnection.h"
 #include "SocketConnection.h"
@@ -47,7 +47,7 @@ int serveStatic(lua_State *L);
 std::string nativeRenderTemplate(const std::string& path,std::map<std::string,std::string> params,lua_State *L);
 int renderTemplate(lua_State *L);
 
-void jsonify_table(lua_State* L, json::jobject& obj);
+void jsonify_table(lua_State* L, nlohmann::json& obj);
 int jsonify(lua_State *L);
 
 int json_to_lua(lua_State* L);
@@ -55,7 +55,9 @@ void json_array_to_lua(lua_State* L, nlohmann::json& json_array);
 void json_object_to_lua(lua_State *L, nlohmann::json& json_obj);
 //int parseJson(lua_State *L);
 
-char *nativeFetch(std::string url,std::string method,std::string data="");
+char *nativeFetch(std::string url, std::string method, std::string data = "", std::string headers="");
 int fetch(lua_State* L);
+
+int getConfig(lua_State* L);
 
 #endif /* LUA_EXT_H */

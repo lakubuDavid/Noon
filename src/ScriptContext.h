@@ -8,8 +8,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
-#include "LuaExt.h"
+#include "CommonLuaExtensions.h"
 #include "Middlewares.h"
+#include "ILuaExtension.h"
 
 class App;
 typedef struct ScriptInfo {
@@ -22,7 +23,7 @@ typedef struct ScriptInfo FileInfo;
 
 typedef void (*FileChangeCallback) (FileInfo file);
 
-class ScriptEngine {
+class ScriptContext {
     App* _app;
     lua_State *L;
     // static ScriptEngine* instance;
@@ -31,7 +32,9 @@ class ScriptEngine {
 
     bool _isOpen = false;
   public:
-    ScriptEngine(App* app);
+    ScriptContext(App* app);
+
+    void useExtension(ILuaExtension* extension);
 
     void init();
     void open();

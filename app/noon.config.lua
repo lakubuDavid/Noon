@@ -8,4 +8,5 @@ routes = {
     ["/api/query"] = "api/query.lua",
     ["/api/post"] = "api/post.lua",
     ["/api/middlewares"] = "api/middlewares.lua",
+    ["/all/..."]="_fallback.lua"
 }

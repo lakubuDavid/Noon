@@ -1,27 +1,21 @@
 #include "Router.h"
 #include "App.h"
+#include "Log.h"
 
 using namespace std;
 
 Router::Router(App *app) { this->app = app; }
 
 void Router::addRoute(std::string route, std::string filename) {
-//    auto name = filename.substr(0, filename.length() - 4);
-//    for (auto i = 0; i < name.length(); i++) {
-//        if (name[i] == '/')
-//            name[i] = '_';
-//    }
 
-    std::cout << "Adding route " << route
-              << "\n\tpath:" << filename << std::endl;
+//    std::stringstream out;
+//    out << "Adding route " << route
+//              << "\n\tpath:" << filename << std::endl;
+//    Log::println(out.str());
     // 1. Load the lua script
 //    auto script = this->app->script();
     routes.insert(std::make_pair(route, filename));
-//    if (script->loadModule("routes/" + filename)) {
-//        // 2. Register the api route
-//    } else {
-//        std::cout << "Can't load " << filename << std::endl;
-//    }
+
 }
 /*
    Synopsis: we have different types of routes:
@@ -39,19 +33,37 @@ void Router::addRoute(std::string route, std::string filename) {
  */
 EndpointMatch Router::getEndpoint(std::string path) {
     EndpointMatch match = parseUrl(path);
-    // TODO : Parse query parameters
-    // TODO : Implement dynamic routes
-    // TODO : Implement catch all routes
 
     if (this->routes.find(match.path) != this->routes.end()) {
         match.endpoint = routes[match.path];
     } else {
-        match.endpoint = "404";
+        bool found = false;
+        /* -- Check catch all routes -- */
+        for(auto kvp : this->routes){
+            if(kvp.first.ends_with("...")){
+                int l = kvp.first.length() - 3;
+                auto base_path = kvp.first.substr(0,l);
+                if(path.starts_with(base_path)){
+                    auto subPath = path.substr(l);
+
+                    match.endpoint = kvp.second;
+                    match.subPath = subPath;
+
+                    found = true;
+                    break;
+                }
+            }
+        }
+        /* -- Check dynamic routes -- */
+        // TODO : Check for dynamic routes
+        if(!found) {
+            match.endpoint = "404";
+        }
     }
     return match;
 }
 
-std::map<std::string, std::string> Router::parse_query_string(const std::string& query_string) {
+std::map<std::string, std::string> Router::parseQueryString(const std::string& query_string) {
     std::map<std::string, std::string> query_params;
     size_t pos = 0;
     while (pos < query_string.length()) {
@@ -81,7 +93,7 @@ EndpointMatch Router::parseUrl(const string &url) {
     EndpointMatch  match;
     auto pos = url.find('?');
     auto main_url = url.substr(0,pos);
-    auto params = parse_query_string(url.substr(pos + 1));
+    auto params = parseQueryString(url.substr(pos + 1));
     match.url = url;
     match.path = main_url;
     match.parameters = params;

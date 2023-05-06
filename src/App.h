@@ -6,24 +6,25 @@
 #include <iostream>
 #include <fstream>
 
-#include "ScriptEngine.h"
-#include "HttpServer.h"
+#include "ScriptContext.h"
+#include "Server.h"
 
 class App {
     lua_State *lua_State;
-    ScriptEngine *scriptEngine;
-    HttpServer *httpServer;
+    ScriptContext *scriptEngine;
+    Server *server;
 
     int _port = 8080;
     bool _debugMode = false;
     static App* instance;
     bool running;
 public:
-    App(int port=8080);
+    App();
     virtual ~App();
 
     int run();
-    ScriptEngine* script();
+    void close();
+    ScriptContext* script();
 
     void setDebugMode(bool devMode);
 

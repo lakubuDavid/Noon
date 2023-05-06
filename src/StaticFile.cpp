@@ -8,9 +8,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "stb_image.h"
+#include "Utils.h"
 
 FileType getFileType(const std::string& path) {
-    auto p = boost::filesystem::path(path);
+    auto p = boost::filesystem::path(getPath(path));
     std::string ext = p.extension().string();
     if (ext == ".gif") {
         return FILE_TYPE_IMAGE_GIF;
@@ -25,7 +26,7 @@ FileType getFileType(const std::string& path) {
 }
 
 bool openFile(const std::string &path, File &info) {
-    auto p = boost::filesystem::path(path);
+    auto p = boost::filesystem::path((path));
 //    file.path = path;
     auto type = getFileType(path);
     switch (type) {
@@ -59,12 +60,15 @@ unsigned char * readImageFile(const std::string& path) {
 
 char* readTextFile(const std::string& path) {
     std::ifstream f = std::ifstream(path.c_str());
+    if(!f.is_open())
+            return "";
     std::string line;
 
     auto text = std::stringstream();
     while (std::getline(f, line)) {
         text << line << std::endl;
     }
+    f.close();
 
     auto str = text.str();
 

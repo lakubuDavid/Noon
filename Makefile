@@ -3,12 +3,10 @@ APPNAME := noon
 
 # define the cpp compiler to use
 CXX := clang++
-
 CXX_VERSION := c++20
 
 # define the FLAGS
 FLAGS := -Wall -llua -lboost_filesystem -lboost_filesystem -lboost_chrono -lboost_thread -lssl -lcrypto  -g
-
 DEFINES :=
 #-DBOOST_NO_EXCEPTIONS
 
@@ -26,9 +24,6 @@ SRC := src
 
 # define object directory
 OBJ := obj
-
-# define resource directory
-RES := res
 
 VPATH := $(SRC) $(INC) $(LIB)
 
@@ -62,7 +57,14 @@ endif
 
 OBJS := $(patsubst %.cpp, $(OBJ)/%.o, $(notdir $(wildcard $(SRC)/*.cpp) $(wildcard $(LIB)/*.cpp)))
 
-# Generate object files
+debug: FLAGS += -g -DDEBUG
+debug: TARGET:= $(patsubst $(BIN)% ,$(BIN)/debug%, $(TARGET))
+debug: $(patsubst $(BIN)% ,$(BIN)/debug%, $(TARGET))
+
+release: FLAGS += -O2 -DNDEBUG
+release: TARGET:= $(patsubst $(BIN)% ,$(BIN)/release%, $(TARGET))
+release: $(patsubst $(BIN)% ,$(BIN)/release%, $(TARGET))
+
 $(OBJ)/%.o: %.cpp
 ifeq ($(OS),Windows_NT)
 	@IF NOT EXIST $(subst /,\,$(OBJ)) mkdir $(subst /,\,$(OBJ))
@@ -70,10 +72,12 @@ else
 	@mkdir -p $(OBJ)
 endif
 	@echo $(CYAN)Compiling: $(RED)$(@F)$(RESET)
-	@$(CXX) -g -std=$(CXX_VERSION) $(DEFINES) -I $(INC) -c $< -o $@
+	@$(CXX) -std=$(CXX_VERSION) -g $(DEFINES) -I $(INC) -c $< -o $@
+
 
 all:$(TARGET)
-# Generate executable
+
+
 $(TARGET): $(OBJS)
 ifeq ($(OS),Windows_NT)
 	@IF NOT EXIST $(subst /,\,$(BIN)) mkdir $(subst /,\,$(BIN))
@@ -81,12 +85,10 @@ else
 	@mkdir -p $(BIN)
 endif
 	@echo $(CYAN)Creating executable: $(GREEN)$(@F)$(RESET)
-	@$(CXX) -g $(OBJS) -o $@ $(FLAGS)
+	@$(CXX) $(OBJS) -o $@ $(FLAGS)
 
 .PHONY: run
 run:
-# @echo $(CYAN)Copying resources
-# @cp -R $(RES)/* $(BIN) 
 	@$(TARGET)
 
 .PHONY: clean

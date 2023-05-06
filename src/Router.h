@@ -13,10 +13,17 @@
 class App;
 
 typedef struct EndpointMatch{
+  // The path to the endpoint
   std::string path;
+  // The full url
   std::string url;
+  // The path to the lua script linked to the endpoint
   std::string endpoint;
+  // For catch all routes : The path after the "catch all" part
+  std::string subPath;
+  // Query parameters
   std::map<std::string, std::string> parameters;
+  // Route parameters for dynamic routes
   std::map<std::string, std::string> routeParameters;
 } EndpointMatch;
 
@@ -34,7 +41,7 @@ public:
     /// @param filename Path to the lua script containing the route
   void addRoute(std::string route, std::string filename);
 
-    static std::map<std::string, std::string> parse_query_string(const std::string& query_string);
+    static std::map<std::string, std::string> parseQueryString(const std::string& query_string);
     static EndpointMatch  parseUrl(const std::string& url);
   EndpointMatch getEndpoint(std::string endpoint);
 };

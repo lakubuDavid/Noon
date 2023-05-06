@@ -94,5 +94,6 @@
         "undefined-global",
         "duplicate-set-field"
     ],
-    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+    "C_Cpp.errorSquiggles": "disabled"
 }

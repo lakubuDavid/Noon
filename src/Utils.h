@@ -60,7 +60,8 @@ Result<T>::Result(T value) {
 
 
 int parse_int(const std::string& str);
-
+std::string getPath(const std::string& path);
+void printHelp();
 //Connection* openConnection(const std::string& url);
 
 #endif //UTILS_H

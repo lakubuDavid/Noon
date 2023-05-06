@@ -1,10 +1,11 @@
-#include "LuaExt.h"
+#include "CommonLuaExtensions.h"
 #include <cstdio>
+#include "RuntimeConfig.h"
 
 using namespace std;
 
 std::string nativeRenderTemplate(const std::string &path, map<string, string> params, lua_State *L) {
-    auto file = std::ifstream(path);
+    auto file = std::ifstream(getPath(path));
     if (!file.is_open()) {
         std::cerr << "Error opening " << path << std::endl;
         // throw;
@@ -120,7 +121,7 @@ int renderTemplate(lua_State *L) {
 
 char *nativeServeStatic(const std::string &path) {
     std::ifstream file;
-    file.open(path);
+    file.open(getPath(path));
     if (!file.is_open()) {
         std::cerr << "Error opening " << path << std::endl;
         // throw;
@@ -152,7 +153,7 @@ int serveStatic(lua_State *L) {
     return 0;
 }
 
-void jsonify_table(lua_State *L, json::jobject &obj) {
+void jsonify_table(lua_State *L, nlohmann::json &obj) {
     int type;
     const char *key;
     lua_pushnil(L);
@@ -170,7 +171,7 @@ void jsonify_table(lua_State *L, json::jobject &obj) {
                 obj[key] = (lua_toboolean(L, -1));
                 break;
             case LUA_TTABLE:
-                json::jobject sub_obj;
+                nlohmann::json sub_obj;
                 jsonify_table(L, sub_obj);
                 obj[key] = sub_obj;
                 break;
@@ -182,10 +183,10 @@ void jsonify_table(lua_State *L, json::jobject &obj) {
 int jsonify(lua_State *L) {
     luaL_checktype(L, -1, LUA_TTABLE);
 
-    json::jobject obj;
+    nlohmann::json obj;
     jsonify_table(L, obj);
 
-    std::string json_str = obj.as_string();
+    std::string json_str = obj.dump();
     lua_pushstring(L, json_str.c_str());
 
     return 1;
@@ -253,7 +254,7 @@ void json_object_to_lua(lua_State *L, nlohmann::json &json) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-char *nativeFetch(std::string url, std::string method, std::string data) {
+char *nativeFetch(std::string url, std::string method, std::string data, std::string headers) {
     int err;
     ConnectionInfo cinfo;
     cinfo = Connection::getInfo(url);
@@ -263,9 +264,9 @@ char *nativeFetch(std::string url, std::string method, std::string data) {
         // remove the protocol
         auto full_url = url;
         int pos = full_url.find("://");
-        auto no_protocol = full_url.substr(pos+3);
+        auto no_protocol = full_url.substr(pos + 3);
         pos = no_protocol.find("/");
-        path = no_protocol.substr( pos);
+        path = no_protocol.substr(pos);
     }
     printf("[fetch] : Fetching %s from %s | %s on port %d\n", path.c_str(), cinfo.host.c_str(),
            method.c_str(), cinfo.porti);
@@ -285,6 +286,7 @@ char *nativeFetch(std::string url, std::string method, std::string data) {
 
     string request = method + " " + path + " HTTP/1.1\r\nHost: " + cinfo.host +
                      "\r\n";
+    request += headers;
     request += "Accept : */* \r\n";
     if (method == "POST" || method == "PUT") {
         request += "Content-Type: "
@@ -294,7 +296,7 @@ char *nativeFetch(std::string url, std::string method, std::string data) {
     } else {
         request += "\r\n";
     }
-
+    Log::println(request);
     try {
         if (connection->write((char *) request.c_str(), request.length()) < 0) {
             cerr << "[fetch] : Send failed" << endl;
@@ -325,34 +327,80 @@ char *nativeFetch(std::string url, std::string method, std::string data) {
 #pragma clang diagnostic pop
 
 int fetch(lua_State *L) {
-    if (lua_isstring(L, -3) && lua_isstring(L, -2)) {
-        string url = lua_tostring(L, -3);
-        string method = lua_tostring(L, -2);
-        string data = "";
-        printf("[lua] : fetching %s | %s\n", url.c_str(), method.c_str());
-        if ((method == "POST" || method == "PUT") && !lua_isstring(L, -1)) {
-            // If the method is POST or PUT, the 3rd argument should be
-            // provided as a string
+    // old syntax : fetch(url,method,data,headers)
+    // better syntax : fetch(url,method,options<should contain data and headers>)
+    if (lua_isstring(L, -3) && lua_isstring(L, -2))
+    {
+        try{
+            string url = lua_tostring(L, -3);
+            string method = lua_tostring(L, -2);
+
+            Log::println("[lua] : fetching " + url + " | " + method);
+
+            string data = "";
+            string headers = "";
+
+            /* -- Get the options table -- */
+//            lua_pushnil(L);
+            /*while (lua_next(L, -2) != 0) {
+                auto key = lua_tostring(L, -2);
+                printf("fetch options key : %s", key);
+                if (key == "body" && lua_istable(L, -1)) {
+                    Log::println("[lua - fetch] : found request body");
+                    nlohmann::json obj;
+                    jsonify_table(L, obj);
+                    data = lua_tostring(L, -1);
+                } else if (key == "headers" && lua_istable(L, -1)) {
+                    lua_pushnil(L);
+                    while (lua_next(L, -2) != 0) {
+                        std::string k = lua_tostring(L, -2);
+                        std::string v = lua_tostring(L, -1);
+                        headers += k + ":" + v + "\n";
+                        lua_pop(L, 1);
+                    }
+                }
+                lua_pop(L, 1);
+            }
+*/
+
+            if ((method == "POST" || method == "PUT")) {
+                // If the method is POST or PUT, the 3rd argument should be
+                // provided as a string
+                if (!lua_isstring(L, -1)) {
+                    lua_pushnil(L);
+                    return 1;
+                } else {
+                    data = lua_tostring(L, -1);
+                }
+            }
+
+            char *fdata = nativeFetch(url, method, data, headers);
+            if (fdata == NULL) {
+                lua_pushnil(L);
+            } else {
+                lua_pushstring(L, fdata);
+            }
+            return 1;
+        }
+        catch (std::exception& e) {
+            printf("fetch error : %s\n", e.what());
             lua_pushnil(L);
             return 1;
-        } else {
-            data = lua_tostring(L, -1);
         }
-
-        char *fdata = nativeFetch(url, method, data);
-        // long timer = time(NULL);
-        if (fdata == NULL) {
-            //   cerr << "Nothing fetched from " << url << endl;
-            lua_pushnil(L);
-        } else {
-            //   timer = time(NULL) - timer;
-            //   cout << timer << "ms elapsed"<<endl;
-            lua_pushstring(L, fdata);
-        }
-        return 1;
     }
     // First 2 args are mandatory
     printf("[lua] : Invalid arguments for fetch");
     lua_pushnil(L);
+    return 1;
+}
+
+int getConfig(lua_State *L) {
+    if (lua_isstring(L, -1)) {
+        auto config = lua_tostring(L, -1);
+        auto value = RuntimeConfig::instance()->get(config);
+        lua_pushstring(L, value.c_str());
+    } else {
+        lua_pushstring(L, "");
+    }
     return 1;
 }

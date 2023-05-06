@@ -18,19 +18,15 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-// typedef struct HttpServer{
-//     int port;
-//     int socket;
-// }HttpServer;
 
-// HttpServer* initHttpServer(HttpServer* server,int port);
 class App;
-class HttpServer{
+class Server{
 
     int _port;
     int _socket;
-    int _clientSocket;
 
+    int _clientSocket;
+    SSL* _clientSSL;
 //    Protocol protocol;
 
     SSL *ssl;
@@ -44,21 +40,25 @@ class HttpServer{
     // std::map<int, std::string> statusMessages;
     std::string getStatusMessage(int status_code);
 
-    // Store api endpoints as key value pair of the form (endpoint,lua table)
-    // Example: ['/','index']
-    //          ['/clients/names','clients.names']
-    // std::map<std::string, std::string> _apiRoutes;
 
 public:
-    HttpServer(int port,App* app); 
-    ~HttpServer();
+    Server(int port, App* app);
+    ~Server();
     void init();
     void exit();
 
+    std::string getIpAddress();
+
     Router* router();
     // Called in the main loop
-    bool tick();
-    void sendResponse(const std::string& response_data, const std::string& contentType, int status_code);
+    bool httpListen();
+    bool httpsListen();
+
+    bool listen(bool secure=false);
+    void sendResponse(const std::string &response_data, const std::string &contentType, int status_code, bool useSSL=false);
+
+    bool handleRequest(char *request, bool useSSL= false);
+
 };
 
 #endif
