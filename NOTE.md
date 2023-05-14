@@ -1,4 +1,3 @@
-
 # Notes
 
 ## [Wednesday 5,April 2023]
@@ -24,14 +23,14 @@ end
 
 function handle()
     local user = someCodeToGetUser()
-    if(user.loggedIn) then
+    if (user.loggedIn) then
         request.user = user
     end
     return next()
 end
 ```
->**NOTE**: maybe I'll change the name of the middleware function 
 
+> **NOTE**: maybe I'll change the name of the middleware function
 
 #### Middleware return value
 
@@ -40,23 +39,21 @@ with a set of functions
 
 ```lua
 
-    next() -- Continue the request execution flow as it is
-    abort(status_code) -- Abort the request execution flow and returns the status code (403 by default)
-    redirect(path) -- Redirect the request to path
+next() -- Continue the request execution flow as it is
+abort(status_code) -- Abort the request execution flow and returns the status code (403 by default)
+redirect(path) -- Redirect the request to path
 ```
-
-
 
 #### Application
 
 Middlewares will be registered as the useMiddleware function is executed
-so between the ```lua_dofile(L,routes)``` and  the execution of the routes.
+so between the ```lua_dofile(L,routes)``` and the execution of the routes.
 So we need a way of keeping a middleware list in memory before executing the route
 
 ##### Idea 1
 
 We define a global variable that will be used to store the middleware list <br>
-Then before we execute the routes we access that list of middlewares,execute each one of them, and 
+Then before we execute the routes we access that list of middlewares,execute each one of them, and
 then we execute route.
 
 **POSSIBLE ISSUE** : The middleware `handle` functions will override each other since we need the same context.
@@ -67,7 +64,7 @@ won't be necessary anymore.
 
 ### Configs hot reloading
 
-While implementing middlewares, I have decided to also add hot reload of the 
+While implementing middlewares, I have decided to also add hot reload of the
 `noon.config.lua` file ,since every script are loaded on execution ,it means that they
 can be modified while executing but for the `noon.config.lua` file it's more complicated.
 Since routes and app configs are in that file,we need to update the router and apps configs
@@ -79,7 +76,8 @@ So, the initial watcher was supposed to be in a separate thread but whenever I t
 it blocks the entire app
 
 ### Middleware function rename
-The middleware function has been renamed to `RouteHandler`to keep it recognizable since 
+
+The middleware function has been renamed to `RouteHandler`to keep it recognizable since
 it's a global function
 
 ### Middlewares Parameters
@@ -93,13 +91,13 @@ function RouteHandler(params)
     -- Fetch the user
     local user = db.users:get(request.body.id)
     -- If the user has the correct role
-    if(user.role == params.role) then
+    if (user.role == params.role) then
         return next()
     else
-        if(params.redirect_url != nil) then
-            return redirect(params.redirect_url)
+        if (params.redirect_url != nil) then
+    return redirect(params.redirect_url)
         else
-            return abort(403)
+        return abort(403)
         end
     end
 end 
@@ -110,34 +108,35 @@ end
 Since I'm finally done with middlewares I would like to work on two of the most useful
 features : **Data fetching** and **static file serving**.
 
-
 ## [Saturday 8,April 2023]
 
 ### Progression on static file serving
+
 Finally , I have implemented static file serving...kinda...let me explain<br>
 Static file serving is more complicated than it looks like for non-text based files, for now I am able to serve
 text files which means javascript,css,xml and json.
 
 #### How it works
 
-Just put your file in the static folder and _voilà_ 
+Just put your file in the static folder and _voilà_
 
 ```lua
 <app>
-    /routes
-        ...
-    /middlewares
-        ...
-    /static
-        style.css
-        app.js
+/routes
+...
+/middlewares
+...
+/static
+style.css
+app.js
 ```
 
 ### Data fetching
 
 As I was trying to implement data fetching I realised that one of the reasons why it wasn't working
 is because the server doesn't support the `https` protocol.So naturally, the next step will be to implement it
-I've decided that I will use openssl as it's opensource and I can find a lot of documentation and basic examples on ~~ChatGPT~~ the internet
+I've decided that I will use openssl as it's opensource and I can find a lot of documentation and basic examples on ~~
+ChatGPT~~ the internet
 
 This should be my next objective together with binary/image file serving.
 
@@ -146,9 +145,11 @@ This should be my next objective together with binary/image file serving.
 ### Connections, SocketConnections and SSLConnections
 
 So I have decided to implement the connection class to encapsulate the sockets and SSL sockets to make it easier.<br>
-Having an abstraction layer allows me to handle HTTP and HTTPS connections the same way without having a bigger code base,
+Having an abstraction layer allows me to handle HTTP and HTTPS connections the same way without having a bigger code
+base,
 for now they will be used only for data fetching but those classes are designed to be used also on the server itself
-so that instead of having a Server and HttpsServer class we can just have a Server class with either a SSL Connection or a basic Socket Connection one
+so that instead of having a Server and HttpsServer class we can just have a Server class with either a SSL Connection or
+a basic Socket Connection one
 
 ## [Wednesday 19,April 2023]
 
@@ -160,7 +161,8 @@ Somehow it works now...
 
 ### .env file and cli arguments
 
-To make things more organized, I have decided to add command line arguments so that the server executable can be in another directory than the project
+To make things more organized, I have decided to add command line arguments so that the server executable can be in
+another directory than the project
 I have also added environment variables to set some other parameters from it.
 That explains the major use of the `getPath` function since it adds the root at the beginning of the path
 
@@ -170,19 +172,22 @@ That explains the major use of the `getPath` function since it adds the root at 
 
 So, after a small pause, I have implemented Catch all routes and here is how they work : <br>
 
-Catch all routes are defined with a `...` at the end. I have also added a `subPath` fields to the `request` global table.<br>
+Catch all routes are defined with a `...` at the end. I have also added a `subPath` fields to the `request` global
+table.<br>
 By the way I haven't yet described the request table ; It contains informations related to the current request
 
 ```json
 {
   "request": {
-    "method": "...",// The http method
+    "method": "...",
+    // The http method
     "query": {
       // Conatins all the query parameters attached to the request
     },
     "route": {
-      "subPath":"", // For catch all routes : The path following the `...` in the endpoint declaration
-                    //eg. In "/all/..." if we request "/all/dog/names", the subPath will be "/dog/names"
+      "subPath": "",
+      // For catch all routes : The path following the `...` in the endpoint declaration
+      //eg. In "/all/..." if we request "/all/dog/names", the subPath will be "/dog/names"
       "params": {
         // For dynamic route : parameters attached to the url
         // eg. A route defined as "/users/:userId" will have a parameter named "userId" with the value passed to the url
@@ -198,7 +203,8 @@ By the way I haven't yet described the request table ; It contains informations 
 ### Requests headers
 
 So now I need to have a way to interact with headers :
-1. In the `fetch` method : To be able to specify the headers as a KV table
+
+1. In the `fetch` method : To be able to specify the headers
 2. In the `request` table : To be able to get the headers from the request as a KV table
 
 Thats my next mission for the following hours/days/weeks 😅
