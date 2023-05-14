@@ -10,59 +10,72 @@
 
 #include "CommonLuaExtensions.h"
 #include "Middlewares.h"
-#include "ILuaExtension.h"
+#include "interfaces/ILuaExtension.h"
 
 class App;
+
 typedef struct ScriptInfo {
-  boost::filesystem::path path; 
-  boost::thread *watcher = nullptr;
-  time_t last_write;
+	boost::filesystem::path path;
+	boost::thread *watcher = nullptr;
+	time_t last_write;
 } ScriptInfo;
 
 typedef struct ScriptInfo FileInfo;
 
-typedef void (*FileChangeCallback) (FileInfo file);
+typedef void (*FileChangeCallback)(FileInfo file);
 
 class ScriptContext {
-    App* _app;
-    lua_State *L;
-    // static ScriptEngine* instance;
-    std::map<std::string, ScriptInfo> _scripts;
-    void _watchFile(const std::string& path);
+	App *_app;
+	lua_State *L;
+	// static ScriptEngine* instance;
+	std::map<std::string, ScriptInfo> _scripts;
 
-    bool _isOpen = false;
-  public:
-    ScriptContext(App* app);
+	void _watchFile(const std::string &path);
 
-    void useExtension(ILuaExtension* extension);
+	bool _isOpen = false;
+public:
+	ScriptContext(App *app);
 
-    void init();
-    void open();
-    void close();
-    [[nodiscard]] bool isOpen() const { return _isOpen; }
-    void watchChanges();
-    void setupWatchers();
-    FileInfo watchFile(const std::string& path, FileChangeCallback onChangeCallback);
+	void useExtension(ILuaExtension *extension);
 
-    bool loadModule(const std::string& filename);
-    bool loadModuleS(std::string script_content);
 
-    void reload();
+	void init();
 
-    bool registerFunction(const std::string& name, lua_CFunction function);
+	void open();
 
-    int getInt(std::string name);
-    float getFloat(std::string name);
-    std::string getString(std::string name);
+	void close();
 
-    std::map<std::string, std::string> getTable(std::string name);
+	[[nodiscard]] bool isOpen() const { return _isOpen; }
 
-    lua_State *getLuaState();
-    inline std::map<std::string, ScriptInfo> scripts(){
-      return _scripts;
-    }
+	void watchChanges();
 
-    // static ScriptEngine* getInstance();
+	void setupWatchers();
+
+	FileInfo watchFile(const std::string &path, FileChangeCallback onChangeCallback);
+
+	bool loadModule(const std::string &filename);
+
+	bool loadModuleS(std::string script_content);
+
+	void reload();
+
+	bool registerFunction(const std::string &name, lua_CFunction function);
+
+	int getInt(std::string name);
+
+	float getFloat(std::string name);
+
+	std::string getString(std::string name);
+
+	std::map<std::string, std::string> getTable(std::string name);
+
+	lua_State *getLuaState();
+
+	inline std::map<std::string, ScriptInfo> scripts() {
+		return _scripts;
+	}
+
+	// static ScriptEngine* getInstance();
 };
 
 #endif /* SCRIPT_ENGINE_H */

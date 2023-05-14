@@ -4,26 +4,27 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
-            "name": "(gdb) Joindre",
-            "type": "cppdbg",
-            "request": "attach",
-            "program": "${workspaceFolder}/build/noon",
-            "MIMode": "gdb"
-        },
-        {
-            "name": "(gdb) Launch",
+            "name": "(lldb) Lancer",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/noon",
-            "args": [],
+            "args": [
+                "--appDir",
+                "./app"
+            ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build",
+            "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "miDebuggerPath": "/usr/local/bin/gdb"
-        }
+            "externalConsole": false,
+            "MIMode": "lldb",
+        },
+        {
+            "name": "(lldb) Joindre",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${workspaceFolder}/build/noon",
+            "MIMode": "lldb",
+        },
     ]
 }

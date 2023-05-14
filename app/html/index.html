@@ -3,16 +3,21 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css"/>
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="style.css" rel="stylesheet"/>
 </head>
 
 <body>
 <div class="container">
+    <nav>
+        <ul>
+            <li><a href="/todo">Todo</a></li>
+        </ul>
+    </nav>
     <h1>NOON</h1>
     <h2>A Lua Powered⚡️ Server </h2>
-    Hello {{name}} !
+    Hello {{ name }} !
     <div>
         <button id="btn" class="btn">Count :: 0</button>
         <br>
@@ -20,5 +25,5 @@
     😎
 </div>
 </body>
-<script src="index.js" type="text/javascript"></script>
+<script src="/index.js" type="text/javascript"></script>
 </html>

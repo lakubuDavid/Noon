@@ -5,12 +5,11 @@
 #ifndef ILUAEXTENSION_H
 #define ILUAEXTENSION_H
 
-
 #include <lua.hpp>
 
 class ILuaExtension {
 public:
-    virtual void registerExtension(lua_State* L) = 0;
+	virtual void registerExtension(lua_State *L) = 0;
 };
 
 

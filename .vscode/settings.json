@@ -88,7 +88,8 @@
         "ranges": "cpp",
         "span": "cpp",
         "typeindex": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "cinttypes": "cpp"
     },
     "Lua.diagnostics.disable": [
         "undefined-global",

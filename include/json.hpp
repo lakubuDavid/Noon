@@ -649,11 +649,11 @@ class basic_json
     */
     union json_value
     {
-        /// object (stored with pointer to save storage)
+        /// object (stored with pointer to serialize storage)
         object_t* object;
-        /// array (stored with pointer to save storage)
+        /// array (stored with pointer to serialize storage)
         array_t* array;
-        /// string (stored with pointer to save storage)
+        /// string (stored with pointer to serialize storage)
         string_t* string;
         /// boolean
         boolean_t boolean;

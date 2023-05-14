@@ -5,6 +5,10 @@
 ---
 
 function GET()
-    print(jsonify(request))
-    return jsonify({message="Hello from catch all"}), 200
+    --[[ print(jsonify(request))
+
+    ]]
+    local _path = request.route.subPath
+
+    return renderTemplate("html/404.html", { p = _path }), 200
 end

@@ -10,27 +10,30 @@
 #include "Server.h"
 
 class App {
-    lua_State *lua_State;
-    ScriptContext *scriptEngine;
-    Server *server;
+	lua_State *lua_State;
+	ScriptContext *scriptEngine;
+	Server *server;
 
-    int _port = 8080;
-    bool _debugMode = false;
-    static App* instance;
-    bool running;
+	int _port = 8080;
+	bool _debugMode = false;
+	static App *instance;
+	bool running;
 public:
-    App();
-    virtual ~App();
+	App();
 
-    int run();
-    void close();
-    ScriptContext* script();
+	virtual ~App();
 
-    void setDebugMode(bool devMode);
+	int run();
 
-    bool loadConfig();
+	void close();
 
-    static void onConfigChanged(FileInfo info);
+	ScriptContext *script();
+
+	void setDebugMode(bool devMode);
+
+	bool loadConfig();
+
+	static void onConfigChanged(FileInfo info);
 };
 
 #endif

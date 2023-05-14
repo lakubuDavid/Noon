@@ -20,13 +20,14 @@
 
 
 class App;
-class Server{
+
+class Server {
 
     int _port;
     int _socket;
 
     int _clientSocket;
-    SSL* _clientSSL;
+    SSL *_clientSSL;
 //    Protocol protocol;
 
     SSL *ssl;
@@ -42,22 +43,28 @@ class Server{
 
 
 public:
-    Server(int port, App* app);
+    Server(int port, App *app);
+
     ~Server();
+
     void init();
+
     void exit();
 
     std::string getIpAddress();
 
-    Router* router();
+    Router *router();
+
     // Called in the main loop
     bool httpListen();
+
     bool httpsListen();
 
-    bool listen(bool secure=false);
-    void sendResponse(const std::string &response_data, const std::string &contentType, int status_code, bool useSSL=false);
+    bool listen(bool secure = false);
 
-    bool handleRequest(char *request, bool useSSL= false);
+    void sendResponse(std::string response_data, std::string contentType, int status_code, bool useSSL = false);
+
+    bool handleRequest(char *request, bool useSSL = false);
 
 };
 
